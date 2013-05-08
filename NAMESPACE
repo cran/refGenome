@@ -1,0 +1,51 @@
+useDynLib(refGenome)
+## utils: for "head" and "tail" generics
+import(utils,RSQLite)
+exportMethods(
+    addIsoforms,
+    addEnsembl,
+    basedir,
+    "basedir<-",
+    ensemblExons,
+    extractByGeneName,
+    extractFeature,
+    extractPaGenes,
+    extractSeqids,
+    extractTranscript,
+    getGenePositions,
+    getSpliceTable,
+    moveAttributes,
+    getAttr,
+    getGtf,
+    setAttr,
+    setGtf,
+    read.gtf,
+    initialize,
+    saveGenome,
+    tableAttributeTypes,
+    tableFeatures,
+    tableSeqids,
+    tableTranscript.id,
+    tableTranscript.name,
+    writeDB,
+    addXref,
+    getXref
+)
+
+exportClasses(
+     ensemblGenome,
+     ensemblExons,
+     ucscGenome
+)
+export(
+    ensPrimAssembly,
+    load.ensembl,
+    load.ensembl.db,
+    load.ucsc,
+    load.ucsc.db,
+    load.ensembl.exons,
+    overlap,
+    ensemblGenome,
+    ucPrimAssembly,
+    ucscGenome
+)
