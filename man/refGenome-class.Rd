@@ -2,24 +2,22 @@
 \Rdversion{1.1}
 \docType{class}
 \alias{refGenome-class}
+\alias{initialize,refGenome-method}
 \alias{basedir}
 \alias{basedir-methods}
 \alias{basedir,refGenome-method}
 \alias{basedir<-}
 \alias{basedir<--methods}
 \alias{basedir<-,refGenome-method}
-\alias{dbConnection}
-\alias{dbConnection-methods}
-\alias{dbConnection,refGenome-method}
-\alias{dbFileName}
-\alias{dbFileName-methods}
-\alias{dbFileName,refGenome-method}
-\alias{dbFileName<-}
-\alias{dbFileName<--methods}
-\alias{dbFileName<-,refGenome-method}
+\alias{extractFeature}
+\alias{extractFeature-methods}
+\alias{extractFeature,refGenome-method}
 \alias{extractSeqids}
 \alias{extractSeqids-methods}
 \alias{extractSeqids,refGenome-method}
+\alias{extractTranscript}
+\alias{extractTranscript-methods}
+\alias{extractTranscript,refGenome-method}
 \alias{getGtf}
 \alias{getGtf-methods}
 \alias{getGtf,refGenome-method}
@@ -29,9 +27,6 @@
 \alias{getAttr}
 \alias{getAttr-methods}
 \alias{getAttr,refGenome-method}
-\alias{saveGenome}
-\alias{saveGenome-methods}
-\alias{saveGenome,refGenome-method}
 \alias{setAttr}
 \alias{setAttr-methods}
 \alias{setAttr,refGenome-method}
@@ -44,9 +39,6 @@
 \alias{tableSeqids}
 \alias{tableSeqids-methods}
 \alias{tableSeqids,refGenome-method}
-\alias{writeDB}
-\alias{writeDB-methods}
-\alias{writeDB,refGenome-method}
 \alias{ucPrimAssembly}
 \alias{ensPrimAssembly}
 
@@ -85,12 +77,12 @@ dbfile represents SQLite database file.
 # +++++++++++++++++++++++++++++++++++++ #
 # Loading sample data:
 ensfile<-system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
-ens<-load.ensembl(ensfile)
+ens<-loadGenome(ensfile)
 ens
 ddx<-extractByGeneName(ens,"DDX11L1")
 ddx
 ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-load.ucsc(ucfile)
+uc<-loadGenome(ucfile)
 uc
 ddx<-extractByGeneName(uc,"DDX11L1")
 ddx

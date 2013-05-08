@@ -43,6 +43,19 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec);
 
 // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 //
+// Calculate exon_number from subsequent transcript and start values
+// Expects ordering by transcript, seqid, start, end
+//
+// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+SEXP get_exon_number(SEXP pTranscript,SEXP pSeqid, SEXP pStart, SEXP pEnd);
+SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd);
+SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pRend, SEXP pId, SEXP pGeneId, SEXP pStrand);
+
+
+
+// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+//
 // overlap: Compares list of query and reference ranges
 // and reports overlaps in data.frame
 //

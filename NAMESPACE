@@ -4,9 +4,9 @@ import(utils,RSQLite)
 exportMethods(
     addIsoforms,
     addEnsembl,
+    addXref,
     basedir,
     "basedir<-",
-    ensemblExons,
     extractByGeneName,
     extractFeature,
     extractPaGenes,
@@ -17,35 +17,40 @@ exportMethods(
     moveAttributes,
     getAttr,
     getGtf,
+    initialize,
+    read.gtf,
+    refExons,
+    saveGenome,
     setAttr,
     setGtf,
-    read.gtf,
-    initialize,
-    saveGenome,
     tableAttributeTypes,
     tableFeatures,
     tableSeqids,
     tableTranscript.id,
     tableTranscript.name,
+    unifyJuncs,
     writeDB,
-    addXref,
     getXref
 )
 
 exportClasses(
      ensemblGenome,
      ensemblExons,
-     ucscGenome
+     ensemblJunctions,
+     ucscExons,
+     ucscGenome,
+     ucscJunctions
 )
 export(
-    ensPrimAssembly,
-    load.ensembl,
-    load.ensembl.db,
-    load.ucsc,
-    load.ucsc.db,
-    load.ensembl.exons,
-    overlap,
+    ensemblExons,
     ensemblGenome,
+    ensemblJunctions,
+    ensPrimAssembly,
+    loadGenome,
+    loadGenomeDb,
+    overlap,
     ucPrimAssembly,
-    ucscGenome
+    ucscExons,
+    ucscGenome,
+    ucscJunctions
 )
