@@ -407,7 +407,7 @@ setMethod("addIsoforms","ucscGenome",function(object,filename="ucsc_knownisoform
     stop("[addIsoforms.ucscGenome] No gtf table present! Use 'read.gtf' or 'setGtf'!\n")
   if(!file.exists(filename))
     stop("[addIsoforms.ucscGenome] file '",filename,"' does not exist!\n",sep="")
-  cat("[addIsoforms.ucscGenome] Reading file '",basename(filename),"'.\n",sep="")  
+  message("[addIsoforms.ucscGenome] Reading file '",basename(filename),"'.\n",sep="")  
   dt<-read.table(filename,sep=sep,quote="",stringsAsFactors=FALSE,comment.char="#")
   if(ncol(dt)!=2)
     stop("[addIsoforms.ucscGenome] Wrong number of columns: ",ncol(df),"\n")
@@ -415,9 +415,9 @@ setMethod("addIsoforms","ucscGenome",function(object,filename="ucsc_knownisoform
 
   mtc<-match(object@ev$gtf$transcript_id,dt$transcript_id)
   if(any(is.na(mtc)))
-    cat("[addIsoforms.ucscGenome] Warning: gtf$transcript_id misses matches in isoforms table!\n")
+    message("[addIsoforms.ucscGenome] Warning: gtf$transcript_id misses matches in isoforms table!")
   object@ev$gtf$clusterId<-dt$clusterId[mtc]            
-  cat("[addIsoforms.ucscGenome] Finished.\n")
+  message("[addIsoforms.ucscGenome] Finished.")
   return(invisible())
 })
 
@@ -474,7 +474,6 @@ setMethod("getXref","ucscGenome",function(object)
 
 
 
-#setGeneric("getGenePositions",function(object,by)standardGeneric("getGenePositions"))
 setMethod("getGenePositions","ucscGenome",function(object,by,force=FALSE,...)
 {
   # UCSC has can have many gene_id's for one gene_name
@@ -540,6 +539,18 @@ setMethod("getGenePositions","ucscGenome",function(object,by,force=FALSE,...)
   }
   else
     stop("[getGenePositions.ucscGenome] by must be 'gene_id' or 'gene_name'!")
+  
+  message("[getGenePositions.ucscGenome] Adding 'start_codon' and 'stop_codon' positions.")
+  strt<-extractFeature(object,"start_codon")@ev$gtf
+  mtc<-match(res$gene_id,strt$gene_id)
+  stap<-strt$start[mtc]
+  stam<-strt$end[mtc]
+  res$start_codon<-ifelse(res$strand=='+',stap,stam)
+  stpp<-extractFeature(object,"stop_codon")@ev$gtf
+  mtc<-match(res$gene_id,stpp$gene_id)
+  sttp<-stpp$start[mtc]
+  sttm<-stpp$end[mtc]
+  res$stop_codon<-ifelse(res$strand=='+',sttp,sttm)
 
   res<-res[order(res$seqid,res$start),]
   assign("genes",res,envir=object@ev)
@@ -784,6 +795,19 @@ setMethod("getGenePositions","ensemblGenome",function(object,by,force=FALSE,...)
                   strand=object@ev$gtf$strand[mtc],
                   gene_biotype=object@ev$gtf$gene_biotype[mtc])    
   }
+  
+  message("[getGenePositions.ensemblGenome] Adding 'start_codon' and 'stop_codon' positions.")
+  strt<-extractFeature(object,"start_codon")@ev$gtf
+  mtc<-match(res$gene_id,strt$gene_id)
+  stap<-strt$start[mtc]
+  stam<-strt$end[mtc]
+  res$start_codon<-ifelse(res$strand=='+',stap,stam)
+  stpp<-extractFeature(object,"stop_codon")@ev$gtf
+  mtc<-match(res$gene_id,stpp$gene_id)
+  sttp<-stpp$start[mtc]
+  sttm<-stpp$end[mtc]
+  res$stop_codon<-ifelse(res$strand=='+',sttp,sttm)
+  
   res<-res[order(res$seqid,res$start),]
   assign("genes",res,envir=object@ev)
   return(invisible(res))
@@ -912,7 +936,7 @@ setGeneric("refExons",function(object)standardGeneric("refExons"))
 setMethod("refExons","refGenome",function(object)
 {
   if(!is.element("exon_number",names(object@ev$gtf)))
-     refGenome:::addExonNumber(object)
+     addExonNumber(object)
   
   cat("[refExons.refGenome] Extracting tables.\n")
   cds<-extractFeature(object,"CDS")@ev$gtf
@@ -1174,6 +1198,37 @@ setMethod("getGenePositions","refJunctions",function(object,by,force=FALSE,...)
   assign("genes",res,envir=object@ev)
   return(invisible(res))
 })
+
+setGeneric("addIsCoding",function(object,ens)standardGeneric("addIsCoding"))
+setMethod("addIsCoding","ensemblJunctions",function(object,ens)
+{
+  if(!is(ens,"ensemblGenome"))
+    stop("[addIsCoding.ensemblJunctions] ens must be 'ensemblGenome'!")
+  
+  cds<-extractFeature(ens,"CDS")@ev$gtf
+  if(nrow(cds)==0)
+    stop("[addIsCoding.ensemblJunctions] ens contains no 'CDS' entries!")
+  
+  lc<-cds[,c("end","transcript_id","feature")]
+  names(lc)[1]<-"lend"
+  rc<-cds[,c("start","transcript_id","feature")]
+  names(rc)[1]<-"rstart"
+  jc<-object@ev$gtf[order(object@ev$gtf$transcript_id,object@ev$gtf$lend),
+            c("id","lend","rstart","transcript_id")]
+    
+  message("[addIsCoding.ensemblJunctions] Adding left  coding.")
+  lcd<-merge(jc,lc,all.x=TRUE)
+  mtc<-match(object@ev$gtf$id,lcd$id)
+  object@ev$gtf$licd<-ifelse(is.na(lcd$feature[mtc]),FALSE,TRUE)
+    
+  message("[addIsCoding.ensemblJunctions] Adding right coding.")
+  rcd<-merge(jc,rc,all.x=TRUE)
+  mtc<-match(object@ev$gtf$id,rcd$id)
+  object@ev$gtf$ricd<-ifelse(is.na(rcd$feature[mtc]),FALSE,TRUE)
+  message("[addIsCoding.ensemblJunctions] Finished.")
+  return(invisible())
+})
+
 
 
 ##################################################################################################

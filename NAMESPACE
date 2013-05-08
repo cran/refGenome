@@ -1,7 +1,10 @@
 useDynLib(refGenome)
 ## utils: for "head" and "tail" generics
+import(methods)
 import(utils,RSQLite)
+importFrom(doBy,summaryBy)
 exportMethods(
+    addIsCoding,
     addIsoforms,
     addEnsembl,
     addXref,

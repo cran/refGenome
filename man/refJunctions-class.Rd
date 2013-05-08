@@ -10,9 +10,6 @@
 \alias{getSpliceTable}
 \alias{getSpliceTable-methods}
 \alias{getSpliceTable,refGenome-method}
-\alias{unifyJuncs}
-\alias{unifyJuncs-methods}
-\alias{unifyJuncs,refJunctions-method}
 \title{Class \code{"refJunctions"}}
 \description{
 refJunctions represents ensembl genomic annotation data for splice-junctions. 
