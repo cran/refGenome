@@ -63,8 +63,8 @@ Objects can be created by calls of the form \code{ucscGenome()}.
 ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
 uc<-loadGenome(ucfile)
 uc
-saveGenome(uc,"hs.ucsc.small.RData",useBasedir=FALSE)
-ucr<-load("hs.ucsc.small.RData")
+saveGenome(uc,"uc.RData",useBasedir=FALSE)
+ucr<-loadGenome("uc.RData")
 # + + + + + + + + + + + + + + + + + + + # 
 # Extract data for Primary Assembly seqids
 ucpa<-extractSeqids(uc,ucPrimAssembly())

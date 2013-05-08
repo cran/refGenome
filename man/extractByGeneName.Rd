@@ -7,12 +7,13 @@
 The function takes objects derived from \code{refGenome} and returns a subset in which \code{gene_name} matches the given values. The returned object is of the same class as the given object.
 }
 \usage{
-extractByGeneName(object,geneNames,...)
+extractByGeneName(object,geneNames,src,...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{object}{refGenome (or derived). Object from which subset is extracted.}
-  \item{geneNames}{Character. Gene names }
+  \item{geneNames}{Character. Vector with gene names.}
+  \item{src}{Unused within this package. Needed for compatibility reasons.}
   \item{...}{(unused)}
 }
 \value{Same class as \code{object}}

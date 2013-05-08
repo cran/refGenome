@@ -37,13 +37,17 @@
 options(width=60)
 @
 
+\section{\rcl{refGenome} package}
+
+The \rcl{refGenome} package provides functionality for managing of genome annotation data, especially for Ensembl and UCSC data.
+
 
 % + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
 \section{Object types inside refGenome package}
 
-The central classes inside this package are \rcl{refGenome} derived (S4) classes. There is one class for Ensembl genomes \rcl{ensemblGenome} and one class for UCSC genomes \rcl{ucscGenome}. The objects basically contain annotation data in tables and the address of a folder (called "basedir").\\
-\newline
-The \rcl{ensemblExons} class centers on exon-intron-exon boundaries. The class also contains tabled annotation and a folder address ("basedir").
+The central classes inside this package are \rcl{refGenome} derived (S4) classes. The class contains two slots: ev (\rcl{environment}) and basedir (\rcl{character}). All annotation data is kept in data.frames inside the \robj{ev} slot. Saving and loading \rcl{refGenome} derived objects works on the complete content of the environment. This mechanism also avoids generation of copies and allows addition of new data inside of member functions. The basedir slot keeps a path on a hard-disc which is intended as location where data files and object versions can be kept.\\
+
+The package contains three derived class lineages \rcl{refGenome}, \rcl{refExons} and \rcl{refJunctions}. For each lineage there are classes for Ensembl and UCSC defined, e.g. \rcl{ensemblGenome} and \rcl{ucscGenom}. The exon classes focus on annotated exon positions and the junction classes focus on adjacent exons.\\
 
 \subsection{Creation of empty refGenome objects}
 
@@ -107,7 +111,7 @@ In order to import UCSC annotation data into \rcl{refGenome} objects files conta
 \newline
 \url{http://genome.ucsc.edu/cgi-bin/hgTables}\\
 \newline
-or by following the "Tablel Browser" link in the left panel on the homepage. On the Table Browser:\\
+or by following the "Table Browser" link in the left panel on the homepage. On the Table Browser:\\
 \begin{itemize}
   \item Select genome, assembly and track (UCSC genes)
   \item Choose table (knownGene)
@@ -205,8 +209,6 @@ dxu<-extractByGeneName(ucpa,"DDX11L1")
 @
 When gene-names did not match in the gtf-table of the object, a message including all names of not matching gene-names will be printed. When no gene-name matches, a message will be printed and the function returns \Robject{NULL}, which can be tested for later on.\\
 
-
-
 From these extracts we can view the contained transcripts with the \rfc{tableTranscript.id} function:
 <<echo=TRUE>>=
 tableTranscript.id(enpa)
@@ -228,7 +230,7 @@ The function \Rfunction{getGenePositions} accumulates position data for whole ge
 <<echo=TRUE>>=
 gpe<-getGenePositions(ens)
 gpe
-gpu<-getGenePositions(ucpa)
+gpu<-getGenePositions(uc)
 gpu
 @
 There is a slight difference between both results: The last column is \code{gene\_id} for \Rclass{ensemblGenome} and \code{clusterID} for \Rclass{ucscGenome}. This is due to different information which is available for each.
@@ -241,9 +243,13 @@ There is a slight difference between both results: The last column is \code{gene
 
 Exon based view on annotation data can be obtained with \rfc{ensemblExons} which returns an object of class \rcl{ensemblExons}. Basically \rfc{ensemblExons} calls \rfc{extractFeature} for feature type "exon". Information about presence of cds start or end and start-codon or stop-codon is added.
 
-<<>>=
+<<echo=FALSE>>=
 enex<-refExons(ens)
 ucex<-refExons(uc)
+@
+
+<<>>=
+enex
 @
 
 
@@ -269,6 +275,8 @@ ujens<-unifyJuncs(jens)
 ujuc<-unifyJuncs(juc)
 jeg<-getGenePositions(jens)
 jug<-getGenePositions(juc)
+head(ujens)
+head(jug)
 @
 
 The result tables of \rfc{unifyJuncs} and \rfc{getGenePositions} are stored inside the internal environment of \rcl{ensemblJunctions}. From there, the results can easily be reproduced without recalculation. The tables are automatically included in \rfc{saveGenome} and \rfc{load.ensembl.juncs} mechanisms.

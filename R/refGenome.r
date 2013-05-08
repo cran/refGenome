@@ -7,7 +7,7 @@
 ##  Content   :   Funktionality for importing and managing genomic reference data               ##
 ##                (Ucsc, Ensembl, Genbank)                                                      ##
 ##                for usage in R                                                                ##
-##  Version   :   1.0.10                                                                        ##
+##  Version   :   1.1.1                                                                         ##
 ##                                                                                              ##
 ##  Changelog :                                                                                 ##
 ##  05.06.12  :   addIsoforms and addEnsemble delete qualifier rows before (re-) inserting      ##
@@ -27,6 +27,8 @@
 ##  04.08.13  :   Added getSpliceTable, unifyJuncs (1.0.7)                                      ##
 ##  05.08.13  :   Added getUnifiedJuncs, updated vignette (1.0.8)                               ##
 ##  06.08.13  :   New getSplicSite and unifyJuncs in C (1.0.10), valgrind tested                ##
+##  07.08.13  :   refGenome_1.1.0 on CRAN                                                       ##
+##  08.08.13  :   Corrected generic for extractByGeneName (refGenome_1.1.0)                     ##
 ##                                                                                              ##
 ##################################################################################################
 
@@ -76,8 +78,8 @@
 # representation (e.g. newlines as '\n', tabs as '\t').                                            #
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-setGeneric("extractByGeneName",function(object,geneNames,...)standardGeneric("extractByGeneName"))
-setGeneric("getGenePositions",function(object,force=FALSE)standardGeneric("getGenePositions"))
+setGeneric("extractByGeneName",function(object,geneNames,src,...)standardGeneric("extractByGeneName"))
+setGeneric("getGenePositions",function(object,by,force=FALSE,...)standardGeneric("getGenePositions"))
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 #                                                                                                   #
@@ -101,8 +103,8 @@ setClass("refGenome",
 setMethod("initialize","refGenome",function(.Object){
   # Has to be done explicitly here
   # because otherwise obscure copies appear
-  .Object@ev=new.env()
-  assign("class",class(.Object),envir=.Object@ev)
+  .Object@ev=new.env()  
+  assign("rgClass",class(.Object),envir=.Object@ev)  
   return(.Object)
 })
 
@@ -121,7 +123,7 @@ loadGenome<-function(src,basedir)
     # because class needs to be read from ev
     ev<-new.env()
     load(src,envir=ev)   
-    rg<-new(ev$class)
+    rg<-new(ev$rgClass)
     basedir(rg)<-basedir
     rg@ev<-ev
     
@@ -131,7 +133,7 @@ loadGenome<-function(src,basedir)
   {
     ev<-new.env()
     load(src,envir=ev)   
-    rg<-new(ev$class)
+    rg<-new(ev$rgClass)
     basedir(rg)<-basedir
     rg@ev<-ev
   }
@@ -326,7 +328,7 @@ loadGenomeDb<-function(filename)
     if(dbExistsTable(con,tablename))
     {
       assign(tablename,dbReadTable(con,tablename),envir=ref@ev)
-      cat("[loadGenomeDb] ",format(nrow(ref@ev$gtf),big.mark=bm)," rows written to table '",tablename,"'.\n",sep="")
+      cat("[loadGenomeDb] ",format(nrow(ref@ev$gtf),big.mark=bm)," rows copied to '",tablename,"'.\n",sep="")
     }
   }  
   copy_table(dbcon,"gtf")
@@ -360,6 +362,11 @@ setMethod("extractByGeneName","refGenome",function(object,geneNames,...)
   # Returning all rows that match with found gene_name's
   
   gtf<-merge(object@ev$gtf,dtb)
+  
+  # Re-calibrate factor levels
+  fc<-which(unlist(lapply(gtf,class))=="factor")
+  gtf[,fc]<-data.frame(lapply(gtf[,fc],factor))
+  
   gtf<-gtf[order(gtf$gene_name,gtf$start),]
   
   # Assemble result object
@@ -381,7 +388,13 @@ ucscGenome<-function(basedir)
 {
   obj<-new("ucscGenome")
   if(!missing(basedir))
+  {
+    if(!is.character(basedir))
+      stop("[ucscGenome] basedir must be character!")
+    if(!file.exists(basedir))
+      stop("[ucscGenome] basedidr does not exist!")
     obj@basedir<-basedir
+  }
   return(obj)
 }
 
@@ -461,48 +474,73 @@ setMethod("getXref","ucscGenome",function(object)
 
 
 
-#setGeneric("getGenePositions",function(object)standardGeneric("getGenePositions"))
-setMethod("getGenePositions","ucscGenome",function(object,force=FALSE)
+#setGeneric("getGenePositions",function(object,by)standardGeneric("getGenePositions"))
+setMethod("getGenePositions","ucscGenome",function(object,by,force=FALSE,...)
 {
-  if(!is.logical(force))
-    stop("[getGenePositions.ucscGenome] force must be logical!")
+  # UCSC has can have many gene_id's for one gene_name
+  # Differing by 'gene_name' makes sense for UCSC
+  if(missing(by))
+    by<-"gene_name"
   
-  # Copy of table will be in ev -> positions 
-  # need only once be calculated.
-  if(exists("genes",where=object@ev,inherits=FALSE) & !force)
-    return(object@ev$genes)
-  
+  if(!is.character(by))
+    stop("[getGenePositions.ucscGenome] by must be character!")
   if(!exists("gtf",where=object@ev,inherits=FALSE))
     return(NULL)
   if(!is.data.frame(object@ev$gtf))
     stop("[getGenePositions.ucscGenome] gtf-table must be data.frame!")
-  if(!is.element("gene_name",names(object@ev$gtf)))
-    stop("[getGenePositions.ucscGenome] gtf-table must contain 'gene_name' column. Use 'addXref'!")
   
-  # Get (sorted) gene_id's
-  # (as.numeric(genes)==1:n! asc sorted!)
-  genes<-factor(levels(object@ev$gtf$gene_id))
-  n<-length(genes)
-  
-  # Point back into source table
-  mtc<-match(genes,object@ev$gtf$gene_id)
-  
-  # Min start position (table has same order as genes!)
-  mig<-summaryBy(start~gene_id,data=object@ev$gtf,FUN=min)
-  # Max end   position (table has same order as genes!)
-  mxg<-summaryBy(end~gene_id,data=object@ev$gtf,FUN=max)
-  
-  # Assemble result
-  if(is.na(match("gene_name",names(object@ev$gtf))))
+  if(by=="gene_id")
   {
-    res<-data.frame(id=1:n,gene_id=genes,
-                    seqid=object@ev$gtf$seqid[mtc],start=mig[,2],end=mxg[,2],
-                    strand=object@ev$gtf$strand[mtc]) 
-  } else {
-    res<-data.frame(id=1:n,gene_id=genes,gene_name=object@ev$gtf$gene_name[mtc],
-                    seqid=object@ev$gtf$seqid[mtc],start=mig[,2],end=mxg[,2],
-                    strand=object@ev$gtf$strand[mtc]) 
+    if(!is.element("gene_id",names(object@ev$gtf)))
+      stop("[getGenePositions.ucscGenome] gtf-table must contain 'gene_id' column!")
+    # Min start position (table has same order as genes!)
+    mig<-summaryBy(start~gene_id,data=object@ev$gtf,FUN=min)
+    # Max end   position (table has same order as genes!)
+    mxg<-summaryBy(end~gene_id,data=object@ev$gtf,FUN=max)
+    
+    # Get (sorted) gene_id's
+    # (as.numeric(genes)==1:n! asc sorted!)
+    genes<-factor(levels(object@ev$gtf$gene_id))
+    n<-length(genes)
+    # Point back into source table
+    mtc<-match(genes,object@ev$gtf$gene_id)
+    
+    # Assemble result
+    if(is.na(match("gene_name",names(object@ev$gtf))))
+    {
+      res<-data.frame(id=1:n,gene_id=genes,
+                      seqid=object@ev$gtf$seqid[mtc],start=mig[,2],end=mxg[,2],
+                      strand=object@ev$gtf$strand[mtc]) 
+    } else {
+      res<-data.frame(id=1:n,gene_id=genes,gene_name=object@ev$gtf$gene_name[mtc],
+                      seqid=object@ev$gtf$seqid[mtc],start=mig[,2],end=mxg[,2],
+                      strand=object@ev$gtf$strand[mtc]) 
+    }
   }
+  else if(by=="gene_name")
+  {
+    if(!is.element("gene_name",names(object@ev$gtf)))
+      stop("[getGenePositions.ucscGenome] gtf-table must contain 'gene_name' column. Use 'addXref'!")
+    
+    # Min start position (table has same order as genes!)
+    mig<-summaryBy(start~gene_name,data=object@ev$gtf,FUN=min)
+    # Max end   position (table has same order as genes!)
+    mxg<-summaryBy(end~gene_name,data=object@ev$gtf,FUN=max)
+    
+    # Get (sorted) gene_id's
+    # (as.numeric(genes)==1:n! asc sorted!)
+    genes<-factor(levels(object@ev$gtf$gene_name))
+    n<-length(genes)
+    # Point back into source table
+    mtc<-match(genes,object@ev$gtf$gene_name)
+    
+    res<-data.frame(id=1:n,gene_id=object@ev$gtf$gene_id[mtc],gene_name=genes,
+              seqid=object@ev$gtf$seqid[mtc],start=mig[,2],end=mxg[,2],
+              strand=object@ev$gtf$strand[mtc])
+  }
+  else
+    stop("[getGenePositions.ucscGenome] by must be 'gene_id' or 'gene_name'!")
+
   res<-res[order(res$seqid,res$start),]
   assign("genes",res,envir=object@ev)
   return(invisible(res))
@@ -520,7 +558,13 @@ ensemblGenome<-function(basedir)
 {
   obj<-new("ensemblGenome")
   if(!missing(basedir))
+  {
+    if(!is.character(basedir))
+      stop("[ensemblGenome] basedir must be character!")
+    if(!file.exists(basedir))
+      stop("[ensemblGenome] basedidr does not exist!")
     obj@basedir<-basedir
+  }
   return(obj)
 }
            
@@ -583,10 +627,11 @@ setMethod("extractFeature","refGenome",function(object,feature="exon")
   # Returning all rows that has "CDS" feature
   ev<-new.env()
   gtf<-object@ev$gtf[object@ev$gtf$feature==feature,]
-  gtf$seqid<-factor(gtf$seqid)
-  gtf$gene_id<-factor(gtf$gene_id)
-  gtf$transcript_id<-factor(gtf$transcript_id)
   
+  # Re-calibrate factor levels
+  fc<-which(unlist(lapply(gtf,class))=="factor")
+  gtf[,fc]<-data.frame(lapply(gtf[,fc],factor))
+    
   # Assemble result object
   res<-new(class(object))
   basedir(res)<-basedir(object)
@@ -617,10 +662,15 @@ setMethod("extractTranscript","refGenome",function(object,transcripts)
   }
   # reorder (transcrpt_id)
   dtb<-data.frame(transcript_id=transcripts)
+  
+  # Extract and re-calibrate factor levels  
+  gtf<-merge(object@ev$gtf,dtb)
+  fc<-which(unlist(lapply(gtf,class))=="factor")
+  gtf[,fc]<-data.frame(lapply(gtf[,fc],factor))
 
   res<-new(class(object))
   basedir(res)<-basedir(object)
-  assign("gtf",merge(object@ev$gtf,dtb),envir=res@ev)
+  assign("gtf",gtf,envir=res@ev)
   if(exists("gtfattributes",where=object@ev,inherits=FALSE))
   {
     # Should only be present in ensemblGenome
@@ -660,30 +710,13 @@ setMethod("tableTranscript.name","ensemblGenome",function(object)
   return(table(object@ev$gtf$transcript_name))
 })
 
-setGeneric("extractPaGenes",function(object)standardGeneric("extractPaGenes"))
-setMethod("extractPaGenes","ensemblGenome",function(object)
-{
-  if(is.na(match("gene_name",names(object@ev$gtf))))
-    stop("[extractPaGenes.ensemblGenome] gtf table does not contain column 'gene_name'. Use 'moveAttributes'!")
-  if(is.na(match("exon_number",names(object@ev$gtf))))
-    stop("[extractPaGenes.ensemblGenome] gtf table does not contain column 'exon_number'. Use 'moveAttributes'!")
-  
-  enpa<-extractSeqids(object,ensPrimAssembly())
-  first<-function(x) return(x[1])
-  dtb<-enpa@ev$gtf
-  gene<-aggregate(dtb[,c("seqid","source","gene_name")],by=list(gene_id=dtb$gene_id),first)
-  gstart<-aggregate(data.frame(start=dtb$start),by=list(gene_id=dtb$gene_id),min)
-  gend<-aggregate(dtb[,c("end","exon_number")],by=list(gene_id=dtb$gene_id),max)
-  res<-merge(gene,gstart,by="gene_id")
-  res<-merge(res,gend,by="gene_id")
-  res<-res[order(res$seqid,res$start),c(2,5,6,4,1,7)]
-  return(res)
-})
-
 # Changing from aggregate to summaryBy:
 # >> 116 sec -> 3.9 sec (enpa72)
-setMethod("getGenePositions","ensemblGenome",function(object,force=TRUE)
+
+
+setMethod("getGenePositions","ensemblGenome",function(object,by,force=FALSE,...)
 {
+  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
   if(!is.logical(force))
     stop("[getGenePositions.ensemblGenome] force must be logical!")
   
@@ -691,43 +724,71 @@ setMethod("getGenePositions","ensemblGenome",function(object,force=TRUE)
   # need only once be calculated.
   if(exists("genes",where=object@ev,inherits=FALSE) & !force)
     return(object@ev$genes)  
+
+  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+  # Differing by 'gene_id' makes sense for Ensembl
+  if(missing(by))
+    by<-"gene_id"
+  if(!is.character(by))
+    stop("[getGenePositions.ensemblGenome] by must be character!")
+  
   
   if(!exists("gtf",where=object@ev,inherits=FALSE))
     return(NULL)
   if(!is.data.frame(object@ev$gtf))
-    stop("[getGenePositions.refGenome] gtf-table must be data.frame!")
+    stop("[getGenePositions.ensemblGenome] gtf-table must be data.frame!")
   if(is.na(match("gene_name",names(object@ev$gtf))))
     stop("[getGenePositions.ensemblGenome] No 'gene_name' data found. Use 'moveAttributes'!")
   
-  # Get (sorted) gene_id's
-  # (as.numeric(genes)==1:n! asc sorted!)
-  genes<-factor(levels(object@ev$gtf$gene_id))
-  n<-length(genes)  
-  # Point back into source table
-  mtc<-match(genes,object@ev$gtf$gene_id)
-  
-  # Min start position (table has same order as genes!)
-  mig<-summaryBy(start~gene_id,data=object@ev$gtf,FUN=min)
-  # Max end   position (table has same order as genes!)
-  mxg<-summaryBy(end~gene_id,data=object@ev$gtf,FUN=max)
-  
+  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+  if(by=="gene_id")
+  {
+    # Get (sorted) gene_id's
+    # (as.numeric(genes)==1:n! asc sorted!)
+    genes<-factor(levels(object@ev$gtf$gene_id))
+    n<-length(genes)  
+    # Point back into source table
+    mtc<-match(genes,object@ev$gtf$gene_id)
+    
+    # Min start position (table has same order as genes!)
+    mig<-summaryBy(start~gene_id,data=object@ev$gtf,FUN=min)
+    # Max end   position (table has same order as genes!)
+    mxg<-summaryBy(end~gene_id,data=object@ev$gtf,FUN=max)    
+  }
+  else if(by=="gene_name")
+  {
+    # Get (sorted) gene_id's
+    # (as.numeric(genes)==1:n! asc sorted!)
+    genes<-factor(levels(object@ev$gtf$gene_name))
+    n<-length(genes)  
+    # Point back into source table
+    mtc<-match(genes,object@ev$gtf$gene_name)
+    
+    # Min start position (table has same order as genes!)
+    mig<-summaryBy(start~gene_name,data=object@ev$gtf,FUN=min)
+    # Max end   position (table has same order as genes!)
+    mxg<-summaryBy(end~gene_name,data=object@ev$gtf,FUN=max)
+  }
+  else
+    stop("[getGenePositions.ensemblGenome] by must be 'gene_id' or 'gene_name'!")
+
   # Assemble result
   if(is.na(match("gene_biotype",names(object@ev$gtf))))
   {
-    res<-data.frame(id=1:n,gene_id=genes,gene_name=object@ev$gtf$gene_name[mtc],
+    res<-data.frame(id=1:n,gene_id=object@ev$gtf$gene_id[mtc],gene_name=object@ev$gtf$gene_name[mtc],
                     seqid=object@ev$gtf$seqid[mtc],start=mig[,2],end=mxg[,2],
                     strand=object@ev$gtf$strand[mtc])
   } else {
-    res<-data.frame(id=1:n,gene_id=genes,gene_name=object@ev$gtf$gene_name[mtc],
+    res<-data.frame(id=1:n,gene_id=object@ev$gtf$gene_id[mtc],gene_name=object@ev$gtf$gene_name[mtc],
                   seqid=object@ev$gtf$seqid[mtc],start=mig[,2],end=mxg[,2],
                   strand=object@ev$gtf$strand[mtc],
                   gene_biotype=object@ev$gtf$gene_biotype[mtc])    
   }
   res<-res[order(res$seqid,res$start),]
-  
   assign("genes",res,envir=object@ev)
   return(invisible(res))
 })
+
 
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
@@ -759,12 +820,12 @@ setMethod("extractSeqids","refGenome",function(object,regex)
   lgl<-grepl(regex,object@ev$gtf$seqid)
   ans<-new(class(object))
   basedir(ans)<-basedir(object)
-  ans@ev$gtf<-object@ev$gtf[lgl,]
   
-  # Remove unused factor levels
-  ans@ev$gtf$seqid<-factor(ans@ev$gtf$seqid)
-  ans@ev$gtf$gene_id<-factor(ans@ev$gtf$gene_id)
-  ans@ev$gtf$transcript_id<-factor(ans@ev$gtf$transcript_id)
+  # Extract and remove unused factor levels
+  gtf<-object@ev$gtf[lgl,]
+  fc<-which(unlist(lapply(gtf,class))=="factor")
+  gtf[,fc]<-data.frame(lapply(gtf[,fc],factor))
+  ans@ev$gtf<-gtf
   
   if(exists("xref",where=object@ev,inherits=FALSE))
   {
@@ -782,6 +843,19 @@ setMethod("extractSeqids","refGenome",function(object,regex)
   return(ans)
 })
 
+setGeneric("extractPaGenes",function(object)standardGeneric("extractPaGenes"))
+setMethod("extractPaGenes","ensemblGenome",function(object)
+{
+  if(is.na(match("gene_name",names(object@ev$gtf))))
+    stop("[extractPaGenes.ensemblGenome] gtf table does not contain column 'gene_name'. Use 'moveAttributes'!")
+  if(is.na(match("exon_number",names(object@ev$gtf))))
+    stop("[extractPaGenes.ensemblGenome] gtf table does not contain column 'exon_number'. Use 'moveAttributes'!")
+  
+  enpa<-extractSeqids(object,ensPrimAssembly())
+  return(getGenePositions(enpa))
+})
+
+
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # ref-Exons
 
@@ -793,7 +867,13 @@ ensemblExons<-function(basedir)
 {
     obj<-new("ensemblExons")
     if(!missing(basedir))
-      obj@basedir<-basedir
+    {
+      if(!is.character(basedir))
+        stop("[ensemblExons] basedir must be character!")
+      if(!file.exists(basedir))
+        stop("[ensemblExons] basedidr does not exist!")
+      obj@basedir<-basedir     
+    }
     return(obj)
 }
 
@@ -801,7 +881,13 @@ ucscExons<-function(basedir)
 {
   obj<-new("ucscExons")
   if(!missing(basedir))
-    obj@basedir<-basedir
+  {
+    if(!is.character(basedir))
+      stop("[ucscExons] basedir must be character!")
+    if(!file.exists(basedir))
+      stop("[ucscExons] basedidr does not exist!")
+     obj@basedir<-basedir
+  }
   return(obj)
 }
 
@@ -888,7 +974,13 @@ ensemblJunctions<-function(basedir)
 {
   obj<-new("ensemblJunctions")
   if(!missing(basedir))
+  {
+    if(!is.character(basedir))
+      stop("[ensemblJunctions] basedir must be character!")
+    if(!file.exists(basedir))
+      stop("[ensemblJunctions] basedidr does not exist!")
     obj@basedir<-basedir
+  }
   return(obj)
 }
 
@@ -896,7 +988,13 @@ ucscJunctions<-function(basedir)
 {
   obj<-new("ucscJunctions")
   if(!missing(basedir))
+  {
+    if(!is.character(basedir))
+      stop("[ucscJunctions] basedir must be character!")
+    if(!file.exists(basedir))
+      stop("[ucscJunctions] basedidr does not exist!")
     obj@basedir<-basedir
+  }
   return(obj)
 }
 
@@ -908,7 +1006,11 @@ setMethod("getSpliceTable","refGenome",function(object)
   # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
   # Prepare input table
   # Filter for exons
-  gtf<-object@ev$gtf[object@ev$gtf$feature=="exon",]
+  if(is(object,"refExons"))
+    gtf<-object@ev$gtf    
+  else  
+    gtf<-object@ev$gtf[object@ev$gtf$feature=="exon",]
+  
   # Shape and sort input values
   dfr<-data.frame(tr=as.integer(gtf$transcript_id),
                   sq=as.integer(gtf$seqid),
@@ -992,43 +1094,81 @@ setMethod("unifyJuncs","refJunctions",function(object){
 })
 
 
-setMethod("getGenePositions","refJunctions",function(object,force=TRUE)
+setMethod("getGenePositions","refJunctions",function(object,by,force=FALSE,...)
 {
   # Works the same way as version for ensemblGenome
   # Only start -> lstart, end -> rend changed.
   
+  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
   if(!is.logical(force))
-    stop("[getGenePositions.ensemblGenome] force must be logical!")
+    stop("[getGenePositions.refJunctions] force must be logical!")
   
   # Copy of table will be in ev -> positions 
   # need only once be calculated.
   if(exists("genes",where=object@ev,inherits=FALSE) & !force)
-    return(object@ev$genes)  
+    return(object@ev$genes)
   
+  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+  # Differing by 'gene_id' makes sense for Ensembl
+  if(missing(by))
+    by<-"gene_id"
+  if(!is.character(by))
+    stop("[getGenePositions.refJunctions] by must be character!")
+    
+  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
   if(!exists("gtf",where=object@ev,inherits=FALSE))
     return(NULL)
   if(!is.data.frame(object@ev$gtf))
-    stop("[getGenePositions.ensemblJunctions] gtf-table must be data.frame!")
+    stop("[getGenePositions.refJunctions] gtf-table must be data.frame!")
   if(is.na(match("gene_name",names(object@ev$gtf))))
-    stop("[getGenePositions.ensemblJunctions] No 'gene_name' data found!")
+    stop("[getGenePositions.refJunctions] No 'gene_name' data found!")
   
-  # Get (sorted) gene_id's
-  # (as.numeric(genes)==1:n! asc sorted!)
-  genes<-factor(levels(object@ev$gtf$gene_id))
-  n<-length(genes)  
-  # Point back into source table
-  mtc<-match(genes,object@ev$gtf$gene_id)
-  
-  # Min start position (table has same order as genes!)
-  mig<-summaryBy(lstart~gene_id,data=object@ev$gtf,FUN=min)
-  # Max end   position (table has same order as genes!)
-  mxg<-summaryBy(rend~gene_id,data=object@ev$gtf,FUN=max)
-  
-  # Assemble result
-  res<-data.frame(id=1:n,gene_id=genes,gene_name=object@ev$gtf$gene_name[mtc],
+  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+  if(by=="gene_id")
+  {
+    if(!is.element("gene_id",names(object@ev$gtf)))
+      stop("[getGenePositions.refJunctions] gtf-table must contain 'gene_id' column!")
+    # Get (sorted) gene_id's
+    # (as.numeric(genes)==1:n! asc sorted!)
+    genes<-factor(levels(object@ev$gtf$gene_id))
+    n<-length(genes)  
+    # Point back into source table
+    mtc<-match(genes,object@ev$gtf$gene_id)
+    
+    # Min start position (table has same order as genes!)
+    mig<-summaryBy(lstart~gene_id,data=object@ev$gtf,FUN=min)
+    # Max end   position (table has same order as genes!)
+    mxg<-summaryBy(rend~gene_id,data=object@ev$gtf,FUN=max)
+    
+    # Assemble result
+    res<-data.frame(id=1:n,gene_id=genes,
                     seqid=object@ev$gtf$seqid[mtc],start=mig[,2],end=mxg[,2],
                     strand=object@ev$gtf$strand[mtc])
-   
+  }
+  else if(by=="gene_name")
+  {
+    if(!is.element("gene_id",names(object@ev$gtf)))
+      stop("[getGenePositions.refJunctions] gtf-table must contain 'gene_id' column!")
+    # Get (sorted) gene_id's
+    # (as.numeric(genes)==1:n! asc sorted!)
+    genes<-factor(levels(object@ev$gtf$gene_name))
+    n<-length(genes)  
+    # Point back into source table
+    mtc<-match(genes,object@ev$gtf$gene_name)
+    
+    # Min start position (table has same order as genes!)
+    mig<-summaryBy(lstart~gene_name,data=object@ev$gtf,FUN=min)
+    # Max end   position (table has same order as genes!)
+    mxg<-summaryBy(rend~gene_name,data=object@ev$gtf,FUN=max)
+    
+    # Assemble result
+    res<-data.frame(id=1:n,gene_name=genes,
+                    seqid=object@ev$gtf$seqid[mtc],start=mig[,2],end=mxg[,2],
+                    strand=object@ev$gtf$strand[mtc])
+  }
+  else
+    stop("[getGenePositions.refJunctions] by must be 'gene_id' or 'gene_name'!")
+     
   res<-res[order(res$seqid,res$start),]
   
   assign("genes",res,envir=object@ev)
