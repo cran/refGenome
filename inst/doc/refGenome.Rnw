@@ -5,9 +5,22 @@
 \usepackage{hyperref}
 \usepackage[utf8]{inputenc}
 
+% Imported from Biobase package:
+\newcommand{\R}{{\textsf{R}}}
+\newcommand{\code}[1]{{\texttt{#1}}}
+\newcommand{\term}[1]{{\emph{#1}}}
+\newcommand{\Rpackage}[1]{\textsf{#1}}
+\newcommand{\Rfunction}[1]{\texttt{#1}}
+\newcommand{\Robject}[1]{\texttt{#1}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\Rmethod}[1]{{\textit{#1}}}
+\newcommand{\Rfunarg}[1]{{\textit{#1}}}
+
+
 \newcommand{\rtx}[1]{{\textsf{#1}}}
 \newcommand{\rcl}[1]{{\texttt{#1}}}
 \newcommand{\rfc}[1]{{\texttt{#1}}}
+\newcommand{\robj}[1]{{\texttt{#1}}}
 
 \title{Using refGenome package}
 \author{Wolfgang Kaisers, CBiBs HHU Dusseldorf}
@@ -25,8 +38,7 @@ options(width=60)
 @
 
 
-% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
-
+% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
 \section{Object types inside refGenome package}
 
 The central classes inside this package are \rcl{refGenome} derived (S4) classes. There is one class for Ensembl genomes \rcl{ensemblGenome} and one class for UCSC genomes \rcl{ucscGenome}. The objects basically contain annotation data in tables and the address of a folder (called "basedir").\\
@@ -38,8 +50,8 @@ The \rcl{ensemblExons} class centers on exon-intron-exon boundaries. The class a
 Empty objects of \rcl{refGenome} derived classes can be created with \rfc{ensembleGenome()} or \rfc{ucscGenome()}. After creation of an empty object the first step usually is to set the basedir address:
 <<>>=
 library(refGenome)
-ens<-ensemblGenome()
-basedir(ens)<-system.file("extdata",package="refGenome")
+beg<-ensemblGenome()
+basedir(beg)<-system.file("extdata",package="refGenome")
 @
 
 The "basedir" folder is intended to contain all data which is associated with the current annotation set, e.g. downloaded gtf files, saved object data, saved SQLite versions of the data and potenially  sequence information. In order to fill an empty object, annotation data has to be imported from external files.
@@ -52,8 +64,7 @@ The basic importing mechanism for \rcl{refGenome} objects is to import a "gtf" f
 
 The data content of \rcl{refGenome} objects can be saved and re-loaded in several ways. One way is the \rfc{saveGenome} method where the content is written into a compressed ".RData" file. One alternative is to write the content into a SQLite database via \rfc{writeDB}.
 
-% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
-
+% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
 \section{Ensembl Genomes}
 
 The \rcl{ensemblGenome} class is specialized for managing annotation data for ensemble Genomes.
@@ -71,8 +82,8 @@ and choose a file from the "Gene sets" column. They are labeled "GTF". For examp
 A copy of the obtained file should then be placed in the the "basedir" directory. With the appropriate setting of basedir, annotation data can be imported with: 
 <<echo=TRUE>>=
 ens_gtf<-"hs.ensembl.62.small.gtf"
-read.gtf(ens,ens_gtf)
-ens
+read.gtf(beg,ens_gtf)
+beg
 @
 The top lines of the contained table are shown when the object is printed.
 
@@ -81,12 +92,11 @@ The top lines of the contained table are shown when the object is printed.
 In Ensembl gtf files there is additional data contained in the last column ("attributes"). Contained attribute types can be listet with "tableAttributeTypes". Specific attributes can be shifted into the main (gtf-) table by "moveAttributes":
 
 <<echo=TRUE>>=
-tableAttributeTypes(ens)
-moveAttributes(ens,c("gene_name","transcript_name","exon_number"))
+tableAttributeTypes(beg)
+moveAttributes(beg,c("gene_name","transcript_name","exon_number"))
 @
 
-% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
-
+% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
 \section{UCSC Genomes}
 
 Downloading of annotation data for UCSC genomes is a bit more complicated than for Ensemble Genomes because additional data must be downloaded in separate files. The Homepage for UCSC browser can be found under:\\
@@ -125,17 +135,17 @@ addIsoforms(uc,"ucsc_knownisoforms.csv")
 
 \subsection{Load stored data}
 
-Once, annotation data is imported and stored, \rcl{ucscGenome} objects can be restored with the \rfc{load.ucsc} function which is shown below on example data:
+Once, annotation data is imported and stored, \rcl{ucscGenome} objects can be restored with the \rfc{loadGenome} function which is shown below on example data:
 
 <<eval=TRUE>>=
 ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-load.ucsc(ucfile)
+uc<-loadGenome(ucfile)
+ensfile<-system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
+ens<-loadGenome(ensfile)
 @
 
 
-
-% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
-
+% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
 \section{Extracting data subsets}
 
 There are specialized functions for extracting data for multiple purposes.
@@ -188,41 +198,82 @@ enpf
 
 There are some functions which extract objects that contain data for single genes (or transcripts). These functions provide a closer insight into specific regeions.\\
 \newline
-Objects which contain data for single genes can be extracted with
+Objects which contain data for vectors of gene-names can be extracted with
 <<echo=TRUE>>=
 dxe<-extractByGeneName(enpa,"DDX11L1")
 dxu<-extractByGeneName(ucpa,"DDX11L1")
 @
+When gene-names did not match in the gtf-table of the object, a message including all names of not matching gene-names will be printed. When no gene-name matches, a message will be printed and the function returns \Robject{NULL}, which can be tested for later on.\\
+
+
 
 From these extracts we can view the contained transcripts with the \rfc{tableTranscript.id} function:
 <<echo=TRUE>>=
-tableTranscript.id(dxe)
-tableTranscript.id(dxu)
+tableTranscript.id(enpa)
+tableTranscript.id(ucpa)
 @
 
 Data for interesting transcripts can be extracted by \rfc{extractTranscript}:
 <<echo=TRUE>>=
-extractTranscript(dxe,"ENST00000456328")
-extractTranscript(dxu,"uc010nxr.1")
+extractTranscript(ens,"ENST00000456328")
+extractTranscript(uc,"uc010nxr.1")
 @
 
 
-
-
-% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
-
+% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
 \section{Accumulate data for whole genes}
 
-The function \texttt{getGenePositions} accumulates position data for whole genes. Genes are grouped by \texttt{gene\_name} . So this attribute type should be moved into the \texttt{gtf} table via \texttt{moveAttributes}. Due to inclusion of \texttt{exon\_number} data into the table, this attribute type should also be moved into the \texttt{gtf} table.
+The function \Rfunction{getGenePositions} accumulates position data for whole genes. Genes are grouped by \code{gene\_name}. For both, \Rclass{ensemblGenome} and \Rclass{ucscGenome} the \code{gene\_name} column is not present after the standard gtf-import. For \Rclass{ensemblGenome}, \Rfunction{moveAttributes} must be used and for \Rclass{ucscGenome}, \Rfunction{addXref} must be used. Respective warnings are given.
 
 <<echo=TRUE>>=
-gpe<-getGenePositions(enpa)
+gpe<-getGenePositions(ens)
 gpe
 gpu<-getGenePositions(ucpa)
 gpu
 @
+There is a slight difference between both results: The last column is \code{gene\_id} for \Rclass{ensemblGenome} and \code{clusterID} for \Rclass{ucscGenome}. This is due to different information which is available for each.
 
-% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
+% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
+
+\section{Exon and splice-junction based views (only for Ensembl genomes)}
+
+\subsection{Extract exon based table}
+
+Exon based view on annotation data can be obtained with \rfc{ensemblExons} which returns an object of class \rcl{ensemblExons}. Basically \rfc{ensemblExons} calls \rfc{extractFeature} for feature type "exon". Information about presence of cds start or end and start-codon or stop-codon is added.
+
+<<>>=
+enex<-refExons(ens)
+ucex<-refExons(uc)
+@
+
+
+\subsection{Extract splice-junction based views from \rcl{ensemblExons}}
+
+From \rcl{ensemblExons} information about adjacency of exons (which defines annotated splice-sites) can be obtained by putting exons with equal transcript\_id and subsequent exon\_number side by side.\\
+The start and end positions of adjacent exons are renamed to lstart, lend and rstart and rend. The "l" prefix refers to the exon with lower start and end coordinates (i.e. left, lower exon\_number). The "r" prefix refers to the exons with higher start and end coordinates (i.e. right, higher exon\_number).\\
+Setting \robj{coding=TRUE} will restrict the result to exons for which \robj{source} and \robj{gene\_biotype} equal "protein\_coding".
+
+<<>>=
+jens<-getSpliceTable(ens)
+jens
+juc<-getSpliceTable(uc)
+juc
+@
+
+This generally leads to repeated occurrence of start and and positons when a splice-junction is contained in multiple transcripts. Additionally a handful splice-sites with multiple gene-id's are present.\\
+The \rfc{unifyJunc} therefore calculates \robj{nGenes} which represents the multiplicity of each gene-id at each splice-site and then selects a gene-id for which nGenes is maximal.\\
+\rfc{unifyJuncs} adds a \robj{uid} column to the basic \robj{gtf} table which identifies each seqid, left-end, right-start combination uniquely. \rfc{unifyJuncs} also adds a new \robj{ujs} table inside the contained environment.\\
+\rfc{getUnifiedJuncs} takes the result of \rfc{unifyJuncs} and adds gene\_name and strand information.
+<<>>=
+ujens<-unifyJuncs(jens)
+ujuc<-unifyJuncs(juc)
+jeg<-getGenePositions(jens)
+jug<-getGenePositions(juc)
+@
+
+The result tables of \rfc{unifyJuncs} and \rfc{getGenePositions} are stored inside the internal environment of \rcl{ensemblJunctions}. From there, the results can easily be reproduced without recalculation. The tables are automatically included in \rfc{saveGenome} and \rfc{load.ensembl.juncs} mechanisms.
+
+% + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + %
 
 \section{Overlapping}
 

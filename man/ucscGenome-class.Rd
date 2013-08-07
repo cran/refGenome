@@ -12,16 +12,12 @@
 \alias{addXref}
 \alias{addXref-methods}
 \alias{addXref,ucscGenome-method}
-\alias{extractByGeneName,ucscGenome-method}
 \alias{extractTranscript,ucscGenome-method}
 \alias{getXref}
 \alias{getXref-methods}
 \alias{getXref,ucscGenome-method}
-\alias{getGenePositions,ucscGenome-method}
 \alias{tableFeatures,ucscGenome-method}
 \alias{tableTranscript.id,ucscGenome-method}
-\alias{load.ucsc}
-\alias{load.ucsc.db}
 
 \title{Class \code{"ucscGenome"}}
 \description{
@@ -48,11 +44,11 @@ Objects can be created by calls of the form \code{ucscGenome()}.
     \item{addEnsembl}{\code{signature(object = "ucscGenome")}: Imports UCSC 'knownToEnsembl' table. It's appended to the gtf table.}
     \item{addIsoforms}{\code{signature(object = "ucscGenome")}: Imports UCSC ' knownIsoforms' table. It's appendet to the gtf table.}
     \item{addXref}{\code{signature(object = "ucscGenome")}: Imports UCSC 'kgXref' table. A 'geneSymbol' column is added to gtf table. The rest is written into xref table. }
-        \item{extractByGeneName}{\code{signature(object="ucscGenome",geneNames="character")}: Extracts ucscGenome object which contains table subsets}
+        \item{extractByGeneName}{\code{signature(object="ucscGenome",geneNames="character")}: Extracts ucscGenome object which contains table subsets. When none of the \code{geneNames} matches, the function returns \code{NULL}.}
     \item{getXref}{\code{signature(object = "ucscGenome")}: Returns content of xref table. }
-        \item{getGenePositions}{\code{signature(object="ucscGenome")}: Extracts table with position data for whole genes (smallest exon start position and largest exon end position)}
-    \item{load.ucsc}{\code{signature(filename = "character")}: Imports data from stored R-Environment Image. }
-    \item{load.ucsc.db}{\code{signature(filename = "character")}: Imports content of object from sqlite3 database. }
+        \item{getGenePositions}{\code{signature(object="ucscGenome",force="logical")}: Extracts table with position data for whole genes (smallest exon start position and largest exon end position. A copy of the table will be placed inside the internal environment. Upon subsequent call only a copy of the contained table is returned unless \code{force=TRUE} is given. Upon \code{force=TRUE} new gene positions are calculated regardless of existing tables.)}
+    \item{loadGenome}{\code{signature(filename = "character")}: Imports data from stored R-Environment Image. }
+    \item{loadGenomeDb}{\code{signature(filename = "character")}: Imports content of object from sqlite3 database. }
     \item{tableFeatures}{\code{signature(object="ucscGenome")}: Tables content of "feature" column.}
     \item{tableTranscript.id}{\code{signature(object="ucscGenome")}: Tables values in transcript_id column.}
     \item{extractTranscript}{\code{signature(object="ucscGenome",transcripts="character")}: Extracts an object which contains data for subset defined by transcript names.}
@@ -61,22 +57,17 @@ Objects can be created by calls of the form \code{ucscGenome()}.
 \references{http://genome.ucsc.edu/}
 \author{Wolfgang Kaisers}
 \examples{
-# +++++++++++++++++++++++++++++++++++++ #
+# + + + + + + + + + + + + + + + + + + + #
 # Loading and saving
 # From and to R-image (fast loading)
 ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-load.ucsc(ucfile)
+uc<-loadGenome(ucfile)
 uc
 saveGenome(uc,"hs.ucsc.small.RData",useBasedir=FALSE)
 ucr<-load("hs.ucsc.small.RData")
-# Save as SQLite database
-writeDB(uc,filename="ucsc.small.db3",useBasedir=FALSE)
-udb<-load.ucsc.db("ucsc.small.db3")
-
-# +++++++++++++++++++++++++++++++++++++ # 
+# + + + + + + + + + + + + + + + + + + + # 
 # Extract data for Primary Assembly seqids
 ucpa<-extractSeqids(uc,ucPrimAssembly())
-
 # Extract data for indival Genes
 ddx<-extractByGeneName(uc,"DDX11L1")
 ddx
@@ -86,8 +77,7 @@ gp
 tableFeatures(uc)
 extractByGeneName(ucpa,"DDX11L1")
 tableTranscript.id(ucpa)
-
-# +++++++++++++++++++++++++++++++++++++ #
+# + + + + + + + + + + + + + + + + + + + #
 # Create object from scratch
 # uc<-ucscGenome()
 # basedir(uc)<-"/my/genome/basedir"
@@ -96,5 +86,6 @@ tableTranscript.id(ucpa)
 # addXref(uc,"kgXref.csv")
 # addEnsembl(uc,"knownToEnsembl.csv")
 # addIsoforms(uc,"knownisoforms.csv")
+# + + + + + + + + + + + + + + + + + + + #
 }
 \keyword{classes}
