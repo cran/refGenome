@@ -230,7 +230,7 @@ The function \Rfunction{getGenePositions} accumulates position data for whole ge
 <<echo=TRUE>>=
 gpe<-getGenePositions(ens)
 gpe
-gpu<-getGenePositions(ucpa)
+gpu<-getGenePositions(uc)
 gpu
 @
 There is a slight difference between both results: The last column is \code{gene\_id} for \Rclass{ensemblGenome} and \code{clusterID} for \Rclass{ucscGenome}. This is due to different information which is available for each.

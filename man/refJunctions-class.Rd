@@ -39,18 +39,20 @@ http://mblab.wustl.edu/GTF22.html#fields
 Wolfgang Kaisers
 }
 \examples{
-# + + + + + + + + + + + + + + + + + + + #
 # A) Ensembl
-ensfile<-system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
-ens<-loadGenome(ensfile)
-junc<-getSpliceTable(ens)
-unifyJuncs(junc)
+ef<-system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
+ens<-loadGenome(ef)
+enj<-getSpliceTable(ens)
+ufe<-unifyJuncs(enj)
+saveGenome(enj,"enj.RData",useBasedir=FALSE)
+enjr<-loadGenome("enj.RData")
 # + + + + + + + + + + + + + + + + + + + #
 # B) UCSC
-ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-loadGenome(ucfile)
-juc<-getSpliceTable(uc)
-ujuc<-unifyJuncs(juc)
-# + + + + + + + + + + + + + + + + + + + #
+uf<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
+uc<-loadGenome(uf)
+ucj<-getSpliceTable(uc)
+ufu<-unifyJuncs(ucj)
+saveGenome(ucj,"ucj.RData",useBasedir=FALSE)
+ucjr<-loadGenome("ucj.RData")
 }
 \keyword{refJunctions}

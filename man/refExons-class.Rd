@@ -37,16 +37,18 @@ http://mblab.wustl.edu/GTF22.html#fields
 Wolfgang Kaisers
 }
 \examples{
-# + + + + + + + + + + + + + + + + + + + #
 # A) Ensembl
 ensfile<-system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
 ens<-loadGenome(ensfile)
 enex<-refExons(ens)
+saveGenome(enex,"enex.RData",useBasedir=FALSE)
+er<-loadGenome("enex.RData")
 # + + + + + + + + + + + + + + + + + + + #
 # B) UCSC
 ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
 uc<-loadGenome(ucfile)
 ucex<-refExons(uc)
-# + + + + + + + + + + + + + + + + + + + #
+saveGenome(ucex,"ucex.RData",useBasedir=FALSE)
+ur<-loadGenome("ucex.RData")
 }
 \keyword{classes}
