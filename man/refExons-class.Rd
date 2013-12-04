@@ -30,8 +30,11 @@ Objects can be created by calls of the form \code{refExons(rg)}. 'rg' represents
 	 }
 }
 \references{
-http://www.ensembl.org/info/data/ftp/index.html
-http://mblab.wustl.edu/GTF22.html#fields
+\describe{
+  \item{Ensembl File index}{http://www.ensembl.org/info/data/ftp/index.html}
+  \item{GTF Field definitions}{http://mblab.wustl.edu/GTF22.html#fields}
+  \item{UCSC home page}{http://genome.ucsc.edu/}
+}
 }
 \author{
 Wolfgang Kaisers
