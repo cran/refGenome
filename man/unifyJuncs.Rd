@@ -5,7 +5,8 @@
 \alias{unifyJuncs,refJunctions-method}
 \title{Unification of splice-junctions.}
 \description{
-Overlaps query ranges with reference ranges. The function assumes that there is no overlap between reference ranges.
+Overlaps query ranges with reference ranges. The function assumes that
+there is no overlap between reference ranges.
 }
 \usage{
 unifyJuncs(object)
@@ -15,7 +16,12 @@ unifyJuncs(object)
   \item{object}{\code{refJunctions} object. Contains splice-junction data.}
 }
 \details{
-Many splices sites are multiple times contained when calculated from transcripts. In order to obtain unique splice positions the function extracts one data set per (seqid, lend, rstart) combination. For each site the annotation information (gene_id, strand, fexid) is extracted from the most abundand gene name.
+Many splices sites are multiple times contained when calculated from 
+transcripts.
+In order to obtain unique splice positions the function extracts one data
+set per (seqid, lend, rstart) combination.
+For each site the annotation information (gene_id, strand, fexid)
+is extracted from the most abundand gene name.
 }
 \value{
 The function returns a data.frame with the following columns:
@@ -36,7 +42,9 @@ The function returns a data.frame with the following columns:
 Wolfgang Kaisers
 }
 \examples{
+# + + + + + + + + + + + + + + + + + + + #
 # A) Ensembl
+# + + + + + + + + + + + + + + + + + + + #
 ef<-system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
 ens<-loadGenome(ef)
 enj<-getSpliceTable(ens)
@@ -45,6 +53,7 @@ saveGenome(enj,"enj.RData",useBasedir=FALSE)
 enjr<-loadGenome("enj.RData")
 # + + + + + + + + + + + + + + + + + + + #
 # B) UCSC
+# + + + + + + + + + + + + + + + + + + + #
 uf<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
 uc<-loadGenome(uf)
 ucj<-getSpliceTable(uc)

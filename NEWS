@@ -1,0 +1,17 @@
+CHANGES IN VERSION 1.2.8
+-------------------------
+
+NEW FEATURES
+
+    o Included this NEWS file and a ChangeLog file
+
+    o Added overlapJuncs functions: A specialized routine for annotation of splice junctions
+
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Added support for 'gene' records in gtf file (as introduced by Ensembl 76)
+
+BUG FIXES
+
+    o (none)

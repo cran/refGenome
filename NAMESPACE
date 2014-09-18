@@ -1,8 +1,10 @@
 useDynLib(refGenome)
 ## utils: for "head" and "tail" generics
 import(methods)
-import(utils,RSQLite)
+import(utils)
 importFrom(doBy,summaryBy)
+importFrom(DBI, dbDriver)
+importFrom(RSQLite, dbConnect, dbDisconnect,  dbWriteTable, dbReadTable, dbExistsTable)
 exportMethods(
     addIsCoding,
     addIsoforms,
@@ -16,6 +18,7 @@ exportMethods(
     extractSeqids,
     extractTranscript,
     getGenePositions,
+    getGeneTable,
     getSpliceTable,
     moveAttributes,
     getAttr,
@@ -52,6 +55,7 @@ export(
     loadGenome,
     loadGenomeDb,
     overlap,
+    overlapJuncs,
     ucPrimAssembly,
     ucscExons,
     ucscGenome,

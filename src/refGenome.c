@@ -7,13 +7,19 @@
  *
  * Content	:	Managing genomic reference data for usage in R
  *
- * Version	:	1.0.0
+ * Version	:	1.2.4
  *
  * Changelog	:
  * 04.Jun.12	:	get_ucsc_exon_bound_df	now has unique id-values for use as PRIM KEY
  * 06.Jun.12	:	Removed memory leak 	token_list module is now valgrind tested
  * 13.Jun.12	:	get_ens_attribute_df 	additionally has id row for use as PRIM KEY
- * 17.Okt.12	:	split_gtf_attr			Added function for splitting gtf attribute column (valgrind tested)
+ * 17.Okt.12	:	split_gtf_attr			Added function for splitting gtf attribute
+ * 			column (valgrind tested)
+ * 07.May.13    :   	Valgrind tested package examples
+ * 08.May.13    :   	Corrected inline to static R_INLINE (in ptr_pair_list.h)
+ *
+ * 07.Jul.14	:	R_init_refGenome added
+ * 08.Jul.14	:	get_cum_max and gap_overlap function added.
  *
  **************************************************************************************************
  **************************************************************************************************/
@@ -24,22 +30,22 @@
 
 static const int buf_size=2048; // buffer size for printing ints into chars
 
-// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 //
 // Calculate exon_number from subsequent transcript and start values
 // Expects ordering by transcript, seqid, start, end
 //
-// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
 SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
 {
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Expects that pTranscript is ordered
 	// so that consecutive equal pTranscript values
 	// represent junctions
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Check incoming
 	if(TYPEOF(pTranscript)!=INTSXP)
 		error("[get_splice_juncs] pTranscript must be INT!");
@@ -58,8 +64,9 @@ SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
 	int *tr=INTEGER(pTranscript), *id=INTEGER(pId);
 	int *start=INTEGER(pStart), *end=INTEGER(pEnd);
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Count number of splice junctions
+	// = Number of row pairs where tr[i]==tr[i+1]
 	unsigned nJunc=0, i,j;
 	for(i=1,j=0;i<inRow;++i,++j)
 	{
@@ -67,8 +74,9 @@ SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
 			++nJunc;
 	}
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Create output vectors
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	SEXP pLexid;
 	PROTECT(pLexid=allocVector(INTSXP,nJunc));
 	SEXP pRexid;
@@ -89,12 +97,13 @@ SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
 	int *rstart=INTEGER(pRstart);
 	int *rend=INTEGER(pRend);
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Calculate splice pairs
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	unsigned iJunc=0;
 	for(i=1,j=0;i<inRow;++i,++j)
 	{
-		if(iJunc>=nJunc)
+		if(iJunc>nJunc)
 			error("[get_splice_juncs] iJunc error: i=%i\tnJunc=%i\n",i,nJunc);
 
 		if(tr[i]==tr[j])
@@ -110,8 +119,9 @@ SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
 		}
 	}
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Assemble result
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	SEXP dflist;
 	PROTECT(dflist=allocVector(VECSXP,6));
 	SET_VECTOR_ELT(dflist,0,pLexid);
@@ -121,8 +131,9 @@ SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
 	SET_VECTOR_ELT(dflist,4,pRstart);
 	SET_VECTOR_ELT(dflist,5,pRend);
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Column Names
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	SEXP col_names;
 	PROTECT(col_names=allocVector(STRSXP,6));
 	SET_STRING_ELT(col_names,0,mkChar("lexid"));
@@ -133,8 +144,9 @@ SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
 	SET_STRING_ELT(col_names,5,mkChar("rend"));
 	setAttrib(dflist,R_NamesSymbol,col_names);
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Row Names
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	SEXP row_names;
     PROTECT(row_names=allocVector(STRSXP,nJunc));
 
@@ -147,7 +159,7 @@ SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
     free(buf);
     setAttrib(dflist,R_RowNamesSymbol,row_names);
 
-    // + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	setAttrib(dflist,R_ClassSymbol,mkString("data.frame"));
 
 	UNPROTECT(9);
@@ -156,18 +168,19 @@ SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
 
 SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pRend, SEXP pId, SEXP pGeneId, SEXP pStrand)
 {
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Calculates unique junction coordinate values (uJunc)
 	// from a sorted junction list
 	//
 	// Expects that pSeqid, pLend and pRstart are ordered
 	// so that identical junctions are
 	// represented by consecutive equal values
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Check incoming
-
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	if(TYPEOF(pSeqid)!=INTSXP)
 		error("[unify_splice_juncs] pSeqid must be INT!");
 	if(TYPEOF(pLstart)!=INTSXP)
@@ -195,6 +208,7 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 
 	int usq,ule,urs; // unified splice coordinates
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// First row identifies first nJunc site
 	usq=seqid[0];
 	ule=lend[0];
@@ -203,7 +217,9 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 	i=0;
 	//Rprintf("[unify_splice_juncs] Start junc %i at i= %i.\n",nJunc,i);
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Check all subsequent rows for position equality
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	for(i=1;i<n;++i)
 	{
 		if((seqid[i]!=usq) | (lend[i]!=ule) | (rstart[i]!=urs))
@@ -220,7 +236,9 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 	if(nJunc==0)
 		return R_NilValue;
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Create output vectors
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	SEXP puId;
 	PROTECT(puId=allocVector(INTSXP,nJunc));
 
@@ -252,7 +270,9 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 	PROTECT(pFexid=allocVector(INTSXP,nJunc));
 
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Calculate values for sites
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	int     *uid=INTEGER(puId),         *useq=INTEGER(puSeq),
 			*ulstart=INTEGER(puLstart), *ulend=INTEGER(puLend),
 			*urstart=INTEGER(puRstart), *urend=INTEGER(puRend),
@@ -271,8 +291,10 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 	j=0; // write index of actual uJunc
 	i=0; // read  index of actual junc
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Start reading in row 0
 	// Row 0 identifies first uJunc
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	uid[j]=j+1;
 	useq[j]=seqid[i];
 	ulend[j]=lend[i];
@@ -289,7 +311,9 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 	for(k=1;k<nGenes;++k)
 		geneId[k]=0;
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Check all subsequent rows for position equality
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	for(i=1;i<n;++i)
 	{
 		if((seqid[i]!=useq[j]) | (lend[i]!=ulend[j]) | (rstart[i]!=urstart[j]))
@@ -380,13 +404,16 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 		}
 	}
 
-	// + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Complete values for last uJunc-site
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	uNsites[j]=nSites;
 	ulstart[j]=min_lstart;
 	urend[j]=max_rend;
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Get some gene-id with "maximal" gene-id count
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	mxGct=0;
 	mxGid=0;
 	mxStr=0;
@@ -406,7 +433,9 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 	uStrand[j]=mxStr;
 
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Assemble output
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	SEXP dflist;
 	PROTECT(dflist=allocVector(VECSXP,10));
 
@@ -421,8 +450,9 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 	SET_VECTOR_ELT(dflist,8,puStrand);
 	SET_VECTOR_ELT(dflist,9,pFexid);
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Column Names
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	SEXP col_names;
 	PROTECT(col_names=allocVector(STRSXP,10));
 	SET_STRING_ELT(col_names,0,mkChar("id"));
@@ -437,8 +467,9 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 	SET_STRING_ELT(col_names,9,mkChar("fexid"));
 	setAttrib(dflist,R_NamesSymbol,col_names);
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Row Names
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	SEXP row_names;
     PROTECT(row_names=allocVector(STRSXP,nJunc));
 
@@ -451,7 +482,7 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
     free(buf);
     setAttrib(dflist,R_RowNamesSymbol,row_names);
 
-    // + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	setAttrib(dflist,R_ClassSymbol,mkString("data.frame"));
 
 	UNPROTECT(13);
@@ -510,19 +541,23 @@ SEXP get_exon_number(SEXP pTranscript,SEXP pSeqid, SEXP pStart, SEXP pEnd)
 
 
 
-// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 //
 // overlap: Compares list of query and reference ranges
 // and reports overlaps in data.frame
 //
-// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
 SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refstart,SEXP refend)
 {
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// expects qryend >= qrystart, refend >= refstart
 	// expects qrystart and refstart ascending sorted
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Check type of incoming args
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	if(TYPEOF(qryid)!=INTSXP)
 		error("[overlap_ranges] qryid is no INT!\n");
 	if(TYPEOF(qrystart)!=INTSXP)
@@ -536,9 +571,10 @@ SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refs
 	if(TYPEOF(refend)!=INTSXP)
 		error("[overlap_ranges] refend is no INT!\n");
 
-
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Check size of incoming args
 	// Size of qry determines size of output parameters
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	unsigned nRows=LENGTH(qryid);
 	if(nRows==0)
 		error("[overlap_ranges] qryid had length zero!");
@@ -566,6 +602,7 @@ SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refs
 	unsigned nProtected=0;
 	unsigned qidx=0, ridx=0; 	// query and ref indices + max idices
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Column 0: overlap code
 	SEXP vov;
 	PROTECT(vov=allocVector(INTSXP,nRows));
@@ -590,6 +627,8 @@ SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refs
 	SEXP vrid;
 	PROTECT(vrid=allocVector(INTSXP,nRows));
 	++nProtected;
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+
 
 	while((qidx<nRows) & (ridx<nRef))
 	{
@@ -669,7 +708,10 @@ SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refs
 			continue;
 		}
 	}
+
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Process remaining qry rows when rightmost ref ranges are passed
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	if((qidx<nRows) & (qstart[qidx] > rend[nRef-1]))
 	{
 		unsigned refend=rend[nRef-1];
@@ -684,8 +726,9 @@ SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refs
 		}
 	}
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Convert vov to factor
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	SEXP levs;
 	int nLevels=5;
 	PROTECT(levs=allocVector(STRSXP,nLevels));
@@ -703,8 +746,9 @@ SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refs
 	++nProtected;
 	setAttrib(vov,R_ClassSymbol,csymb);
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Create data.frame
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	unsigned nCols=5;
 	SEXP dflist;
 	PROTECT(dflist=allocVector(VECSXP,nCols));
@@ -716,7 +760,9 @@ SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refs
 	SET_VECTOR_ELT(dflist,3,vqid);
 	SET_VECTOR_ELT(dflist,4,vrid);
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Column Names
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	SEXP col_names;
 	PROTECT(col_names=allocVector(STRSXP,nCols));
 	++nProtected;
@@ -728,7 +774,9 @@ SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refs
 	SET_STRING_ELT(col_names,4,mkChar("refid"));
 	setAttrib(dflist,R_NamesSymbol,col_names);
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Create row names for data.frame
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	SEXP row_names;
     PROTECT(row_names=allocVector(STRSXP,nRows));
     ++nProtected;
@@ -743,7 +791,9 @@ SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refs
     free(buf);
     setAttrib(dflist,R_RowNamesSymbol,row_names);
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
     // Make list to data.frame
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	setAttrib(dflist,R_ClassSymbol,mkString("data.frame"));
 	UNPROTECT(nProtected);
 
@@ -792,6 +842,7 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 		error("[split_gtf_attr] attr_vec is no STR: %i!\n",TYPEOF(attr_vec));
 
 	unsigned long int i,n;
+
 	n=LENGTH(id_vec);
 	if(LENGTH(attr_vec)!=n)
 		error("[split_gtf_attr] id_vec and attr_vec must have same length!\n");
@@ -799,6 +850,7 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	unsigned nProtected=0;
 	int *id=INTEGER_POINTER(id_vec);
 
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Column 1: id vector
 	SEXP idvec;
 	PROTECT(idvec=allocVector(INTSXP,n));
@@ -813,7 +865,10 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	SEXP transIdVec;
 	PROTECT(transIdVec=allocVector(STRSXP,n));
 	++nProtected;
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
+
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// flag characters
 	const char space=' ', delim=';', quote='"', zero='\0';
 	// iterator positions
@@ -822,6 +877,7 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	unsigned long first_len,second_len;
 	// attribute index
 	unsigned attr_index;
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
 	ptr_pair_list *l=ptr_pair_list_init();
 	for(i=0;i<n;++i)
@@ -834,34 +890,50 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 		while((*iter==space))
 			++iter;
 
-		while(*iter!=zero)
+		while(*iter != zero)
 		{
-			// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+			// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 			// First token
 			// Take start position
+			// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 			token_first=iter;
 			// Rprintf("[split_gtf_attr] token_first: '%s'\n",token_first);
 
-			if((*iter!='g') && (attr_index==1))
-				error("[split_gtf_attr] First item must be 'gene_id': '%s'!",iter);
-			if((*iter!='t') && (attr_index==2))
-				error("[split_gtf_attr] Second item must be 'transcript_id': '%s'!",iter);
+			if((*iter != 'g') && (attr_index == 1))
+				error("[split_gtf_attr] First item must be 'gene_id': '%s'!", iter);
+
+			// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+			// Ensembl has introduced gene records with version 76.
+			// Their second attribute is 'gene_name' (unlike 'transcript_id')
+			// These gene_name records are silently accepted.
+			// read.gtf later splits the table when gene records are present.
+			// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+			if((*iter != 't') && (attr_index == 2))
+			{
+				if( (*iter != 't') && (*iter != 'g'))
+					error("[split_gtf_attr] Second item must be 'transcript_id' or 'gene_name': '%s'!", iter);
+			}
 
 			// proceed until space and take length
 			while((*iter!=space) && (*iter!=zero))
 				++iter;
-			if(*iter==zero)
+
+			if(*iter == zero)
 				error("[split_gtf_attr] Found end of string in first token in line %lu: '%s'!\n",i+1,iter);
-			if(iter==token_first)
+
+			if(iter == token_first)
 				error("[split_gtf_attr] First token ist empty: '%s'!\n",iter);
 
-			first_len=iter-token_first;
+			first_len = iter - token_first;
 
-			// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+			// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 			// second token:
 			// skip spaces and quotes, then take start position
-			while((*iter==space) || (*iter==quote))
+			// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+
+			while((*iter == space) || (*iter == quote))
 				++iter;
+
 			token_second=iter;
 			// Rprintf("[split_gtf_attr] token_second: '%s'\n",token_second);
 
@@ -883,9 +955,10 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 			while(*iter==space)
 				++iter;
 
-			// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+			// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 			//  Process collected pointer positions
 			//  First token must be gene_id
+			// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 			if(attr_index==1)
 				SET_STRING_ELT(geneIdVec,i,mkCharLen(token_second,second_len));
 			// Second token must be transcript_id
@@ -898,13 +971,15 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 		}
 	}
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	//  Create output data.frames
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	int nCols, nRows;
 	char buf[20];
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Merge id,gene_id and transcript_id into idflist data.frame
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	nCols=3;
 	nRows=n;
 	SEXP idflist;
@@ -938,8 +1013,9 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	setAttrib(idflist,R_RowNamesSymbol,irow_names);
 	setAttrib(idflist,R_ClassSymbol,mkString("data.frame"));
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Merge id, type, value into adflist data.frame
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
 	nCols=3;
 	nRows=l->size;
@@ -1001,8 +1077,9 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	// Class symbol
 	setAttrib(adflist,R_ClassSymbol,mkString("data.frame"));
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-	//  ans result list
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// ans result list
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	int list_len=2;
 	SEXP ans;
 	PROTECT(ans=allocVector(VECSXP,list_len));
@@ -1027,6 +1104,412 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	UNPROTECT(nProtected);
 	return ans;
 }
+
+SEXP get_cum_max(SEXP pVal)
+{
+	int i,n;
+	int *val, *res;
+
+	// Check type of incoming args
+	if(TYPEOF(pVal)!=INTSXP)
+		error("[get_cum_max] pVal is not INT!\n");
+
+	n = LENGTH(pVal);
+	if(n == 0)
+		return R_NilValue;
+
+	SEXP pRes;
+	PROTECT(pRes = allocVector(INTSXP, n));
+
+	val = INTEGER(pVal);
+	res = INTEGER(pRes);
+
+	res[0] = val[0];
+	for(i = 1; i < n; ++i)
+		res[i] = val[i] > res[i-1] ? val[i] : res[i-1];
+
+	UNPROTECT(1);
+	return pRes;
+}
+
+
+SEXP gap_overlap(SEXP pQid, SEXP pQlstart, SEXP pQlend, SEXP pQrstart, SEXP pQrend,
+		SEXP pRid, SEXP pRlstart, SEXP pRlend, SEXP pRrstart, SEXP pRrend, SEXP pRmaxRend)
+{
+	/*
+	 * Gap-sites:			Represent data on splice-sites:
+	 * 						Intronic regions which are flanked by exons.
+	 *
+	 * Position:			Positions are given as integer values:
+	 * 						Coordinates on genomic sequences which
+	 * 						ascend from left to right.
+	 *
+	 * Gap-site records:	Gap-sites are described by four coordinates:
+	 * 						lstart	: left  start
+	 * 						lend	: left  end
+	 * 						rstart	: right start
+	 * 						rend	: right end
+	 *
+	 * 						The coordinates give the genomic positions of
+	 * 						the exons which flank the intron.
+	 *
+	 *
+	 * 						lstart        lend     rstart        rend
+	 *                           |        |             |        |
+	 *                           xxxxxxxxxx             xxxxxxxxxx
+	 *                             (exon)     (intron)    (exon)
+	 *
+	 *
+	 *                      Therefore, it is assumed for each record:
+	 *                      lstart < lend < rstart < rend
+	 *
+	 *                      Instead, the RmaxRend value is used, which is
+	 *                      the cumulative maximum of all rend values
+	 *                      from beginning to the first to the present
+	 *                      record.
+	 *                      The value can be calculated from (nearly sorded !)
+	 *                      rend values by using the previous "get_cum_max"
+	 *                      function.
+	 *
+	 *                      Furthermore, the algorithm only works efficiantly
+	 *                      when the records are somehow ordered
+	 *                      (e.g. by lstart or lend and rend)
+	 *
+	 *
+	 *                      The algorithm searches for overlaps between
+	 *                      query and reference gap-sites as follows:
+	 *
+	 *						For each query gap-site, the algorithm walks
+	 *						reverse from the current position until no more
+	 *						overlaps are possible (-> RmaxRend).
+	 *
+	 *						Then it advances again until the first overlap (hit)
+	 *						is identified.
+	 *
+	 *						From there, the search traverses the reference
+	 *                      downstream until no further overlap is possible.
+	 *
+	 *                      All hits are evaluated by the sum of distances (sod) of
+	 *                      the inner boundaries (lend, rstart) between query
+	 *                      and reference record.
+	 *
+	 *                      The best hit is the one with the minimal sod (possibly = 0)
+	 *                      which will be returned as result.
+	 *
+	 *
+	 */
+
+
+
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// Check input for expected types
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	if((TYPEOF(pQid) != INTSXP) | (TYPEOF(pQlstart) != INTSXP) | (TYPEOF(pQlend) != INTSXP) |
+			(TYPEOF(pQrstart) != INTSXP) | (TYPEOF(pQrend) != INTSXP))
+		error("[gap_overlap] Query values must be INTEGER!");
+
+	if( (TYPEOF(pRid) != INTSXP) | (TYPEOF(pRlstart) != INTSXP) | (TYPEOF(pRlend) != INTSXP) |
+			(TYPEOF(pRrstart) != INTSXP) | (TYPEOF(pRrend) != INTSXP) | (TYPEOF(pRmaxRend) != INTSXP))
+		error("[gap_overlap] Reference values must be INTEGER!");
+
+
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// Declaration of variables
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+
+
+	// + + + + + + + + + + + + + + + //
+	// 1. Internal values
+	// + + + + + + + + + + + + + + + //
+
+	// Running indices
+	int i, j;
+	// Number of query and reference records
+	int nq, nr;
+	// Buffer for data.frame names
+	char buf[20];
+
+	// Intermediate values for scoring hits in reference records
+	int ldiff, rdiff, ldist, rdist, sod;
+
+
+	// + + + + + + + + + + + + + + + //
+	// 2. Input data from arguments
+	// + + + + + + + + + + + + + + + //
+
+	// ID and range-gap positions for query and reference
+	int *qid, *qLstart, *qLend, *qRstart, *qRend;
+	int *rid, *rLstart, *rLend, *rRstart, *rRend, *rMaxRend;
+
+
+	// + + + + + + + + + + + + + + + //
+	// 3. Output data.frame
+	// + + + + + + + + + + + + + + + //
+	SEXP dflist, col_names, row_names;
+
+	// Column vectors for data.frame (returned as result)
+	SEXP p_res_qid, p_res_rid, p_res_ldiff, p_res_rdiff, p_res_sod,
+					p_res_nref, p_res_first_refid, p_res_last_refid, p_res_adv, p_res_rev;
+
+	// Integer pointer: point to column arrays of data.frame
+	int *res_qid, *res_rid, *res_ldiff, *res_rdiff, *res_nref,
+						*res_sod, *res_first_refid, *res_last_refid, *res_adv, *res_rev;
+
+
+
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// Initialize variable values
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	nq = LENGTH(pQid);
+	nr = LENGTH(pRid);
+	const int nCols=10, nRows=nq;
+
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// check arguments for equal length
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+
+	if(LENGTH(pQlstart)!=nq || LENGTH(pQlend)!=nq || LENGTH(pQrstart)!=nq ||
+			LENGTH(pQrend)!=nq)
+		error("[gap_overlap] Query values must have equal length!");
+
+	if(LENGTH(pRlstart)!=nr || LENGTH(pRlend)!=nr || LENGTH(pRrstart)!=nr ||
+			LENGTH(pRmaxRend)!=nr)
+		error("[gap_overlap] Reference values must have equal length!");
+
+
+	// Query value arguments
+	qid			= INTEGER(pQid);
+	qLstart 	= INTEGER(pQlstart);
+	qLend		= INTEGER(pQlend);
+	qRstart		= INTEGER(pQrstart);
+	qRend		= INTEGER(pQrend);
+
+	// Reference value arguments
+	rid			= INTEGER(pRid);
+	rLstart		= INTEGER(pRlstart);
+	rLend		= INTEGER(pRlend);
+	rRstart		= INTEGER(pRrstart);
+	rRend		= INTEGER(pRrend);
+	rMaxRend	= INTEGER(pRmaxRend);
+
+	// Column vectors for output data.frame
+	PROTECT(p_res_qid 			= allocVector(INTSXP, nRows));
+	PROTECT(p_res_rid 			= allocVector(INTSXP, nRows));
+	PROTECT(p_res_ldiff			= allocVector(INTSXP, nRows));
+	PROTECT(p_res_rdiff			= allocVector(INTSXP, nRows));
+	PROTECT(p_res_nref 			= allocVector(INTSXP, nRows));
+	PROTECT(p_res_sod			= allocVector(INTSXP, nRows));
+	PROTECT(p_res_first_refid	= allocVector(INTSXP, nRows));
+	PROTECT(p_res_last_refid 	= allocVector(INTSXP, nRows));
+	PROTECT(p_res_adv           = allocVector(INTSXP, nRows));
+	PROTECT(p_res_rev           = allocVector(INTSXP, nRows));
+
+	// Integer array for output data.frame
+	res_qid 		= INTEGER(p_res_qid);
+	res_rid 		= INTEGER(p_res_rid);
+	res_ldiff		= INTEGER(p_res_ldiff);
+	res_rdiff		= INTEGER(p_res_rdiff);
+	res_nref 		= INTEGER(p_res_nref);
+	res_sod			= INTEGER(p_res_sod);
+	res_first_refid	= INTEGER(p_res_first_refid);
+	res_last_refid	= INTEGER(p_res_last_refid);
+	res_adv			= INTEGER(p_res_adv);
+	res_rev			= INTEGER(p_res_rev);
+
+
+
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// Process input data:
+	//
+	// For each query record: find optimal hit in reference records.
+	// i = query index, j = reference index
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	for(i=0, j=0; i<nq; ++i)
+	{
+		res_qid[i] = qid[i];
+		res_rev[i] = 0;
+		res_adv[i] = 0;
+
+		// reset to empty values
+
+		//Rprintf("[gap_overlap] New qry: i=%3i qid= %3i j=%3i + + + + + \n", i, res_qid[i], j);
+
+		// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+		// 1. Identify first hit
+		// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+
+		// 1.1 Reference: Step back before first hit
+		//Rprintf("[gap_overlap] Reverse: ");
+		while(j > 0 && (qLstart[i] <= rMaxRend[j]))
+		{
+			//Rprintf("%2i ",j);
+			--j;
+			++res_rev[i];
+		}
+		//Rprintf("\n");
+
+		// 1.2 Reference: Advance to first hit
+		//Rprintf("[gap_overlap] Advance: ");
+		while(j < nr && (qLstart[i] > rMaxRend[j] ))
+		{
+			//Rprintf("%2i",j);
+			++j;
+			++res_adv[i];
+		}
+		//Rprintf("\n");
+
+		// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+		// 2. Past last reference position ?
+		//    -> Abort search because no more hits are possible
+		// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+		if(j==nr)
+		{
+			// Write "no-hit" events
+			for(;i < nq; ++i)
+			{
+				res_qid[i]         = qid[i];
+				res_rid[i]         = 0;
+				res_ldiff[i]       = NA_INTEGER;
+				res_rdiff[i]       = NA_INTEGER;
+				res_sod[i]         = NA_INTEGER;
+				res_nref[i]        = 0;
+				res_first_refid[i] = 0;
+				res_last_refid[i]  = 0;
+				res_adv[i]		   = 0;
+				res_rev[i]		   = 0;
+			}
+			break;
+		}
+
+		// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+		// 3. Traverse hit region
+		// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+
+		// 3.1 Set pre-traverse values
+		res_rid[i]  =  0; //rid[j];
+		res_nref[i] =  0;
+		res_sod[i]  =  -1;
+		res_first_refid[i] = rid[j];
+
+		// 3.2 Do traverse + identify best hit (= lowest sod)
+		//Rprintf("[gap_overlap] i=%2i j=%2i qid=%2i Hits: ", i,j, res_qid[i]);
+		while(j < nr && (qRend[i] >= rLstart[j]))
+		{
+			// Actual overlap ?
+			if(qLstart[i] < rRend[j] && qRend[i] > rLstart[j])
+			{
+				//Rprintf("%2i ",rid[j]);
+				++res_nref[i];
+
+				// Differences (may be < 0)
+				ldiff = qLend[i] - rLend[j];
+				rdiff =  qRstart[i] - rRstart[j];
+				// Distance (>= 0)
+				ldist = ldiff < 0 ? (-ldiff) : ldiff;
+				rdist = rdiff < 0 ? (-rdiff) : rdiff;
+				// Sum of distances
+				sod   = ldist + rdist;
+
+				// New hit is better than all previous ones
+				if( (sod < res_sod[i]) | (res_sod[i] < 0))
+				{
+					res_rid[i] = rid[j];
+					res_ldiff[i] = ldiff;
+					res_rdiff[i] = rdiff;
+					res_sod[i] = sod;
+				}
+			}
+			++j;
+		}
+		//Rprintf("\n");
+
+
+		// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+		// 4. Set post-traverse values
+		// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+
+		// Reverse once for last hit (also: j points not behind array)
+		--j;
+
+		// No hits -> Indicate empty result set
+		if(res_nref[i] == 0)
+		{
+			res_sod[i]         = NA_INTEGER; // INT_MIN (currently), see Arith.h
+			res_ldiff[i]       = NA_INTEGER;
+			res_rdiff[i]       = NA_INTEGER;
+			res_first_refid[i] = 0;
+			res_last_refid[i]  = 0;
+		}
+		else
+			res_last_refid[i]  = rid[j];
+	}
+
+
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// Create output data.frame
+	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+
+	PROTECT(dflist=allocVector(VECSXP,nCols));
+
+	// Set column vectors
+	SET_VECTOR_ELT(dflist, 0, p_res_qid);
+	SET_VECTOR_ELT(dflist, 1, p_res_rid);
+	SET_VECTOR_ELT(dflist, 2, p_res_ldiff);
+	SET_VECTOR_ELT(dflist, 3, p_res_rdiff);
+	SET_VECTOR_ELT(dflist, 4, p_res_nref);
+	SET_VECTOR_ELT(dflist, 5, p_res_sod);
+	SET_VECTOR_ELT(dflist, 6, p_res_first_refid);
+	SET_VECTOR_ELT(dflist, 7, p_res_last_refid);
+	SET_VECTOR_ELT(dflist, 8, p_res_adv);
+	SET_VECTOR_ELT(dflist, 9, p_res_rev);
+
+
+	// Column Names
+	PROTECT(col_names=allocVector(STRSXP,nCols));
+
+	SET_STRING_ELT(col_names, 0, mkChar("qid"));
+	SET_STRING_ELT(col_names, 1, mkChar("refid"));
+	SET_STRING_ELT(col_names, 2, mkChar("ldiff"));
+	SET_STRING_ELT(col_names, 3, mkChar("rdiff"));
+	SET_STRING_ELT(col_names, 4, mkChar("nref"));
+	SET_STRING_ELT(col_names, 5, mkChar("sod"));
+	SET_STRING_ELT(col_names, 6, mkChar("first_refid"));
+	SET_STRING_ELT(col_names, 7, mkChar("last_refid"));
+	SET_STRING_ELT(col_names, 8, mkChar("nadv"));
+	SET_STRING_ELT(col_names, 9, mkChar("nrev"));
+	setAttrib(dflist,R_NamesSymbol,col_names);
+
+	// Row Names
+	PROTECT(row_names=allocVector(STRSXP,nRows));
+	for(i=0;i<nRows;++i)
+	{
+		sprintf(buf,"%i",i+1);
+		SET_STRING_ELT(row_names,i,mkChar(buf));
+	}
+	setAttrib(dflist,R_RowNamesSymbol,row_names);
+	setAttrib(dflist,R_ClassSymbol,mkString("data.frame"));
+
+	UNPROTECT(13);
+	return dflist;
+}
+
+
+void R_init_refGenome(DllInfo *info)
+{
+	R_CallMethodDef cmd[] ={
+			{ "split_gtf_attr",			(DL_FUNC) &split_gtf_attr,			2},
+			{ "get_exon_number",		(DL_FUNC) &get_exon_number,       	4},
+			{ "get_splice_juncs",		(DL_FUNC) &get_splice_juncs,		4},
+			{ "unify_splice_juncs",		(DL_FUNC) &unify_splice_juncs,		8},
+			{ "overlap_ranges",			(DL_FUNC) &overlap_ranges,			6},
+			{ "get_cum_max",			(DL_FUNC) &get_cum_max,				1},
+			{ "gap_overlap",			(DL_FUNC) &gap_overlap,			   11},
+			{NULL, NULL, 0}
+	};
+	//			{ "",	(DL_FUNC) &,	}
+	R_registerRoutines(info, NULL, cmd, NULL, NULL);
+}
+
 
 #endif	/* REFGENOME_C_ */
 

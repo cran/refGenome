@@ -5,7 +5,12 @@
 Managing annotation data for reference Genomes from UCSC and Ensembl.
 }
 \description{
-The package contains classes for managing (GTF-) annotation data for UCSC and Ensembl genomes. Data can be imported, merged, viewed, searched and saved (as .RData and as SQLite database). There is also a C-routine for detection of overlapping (alignment) ranges with annotated regions.
+The package contains classes for managing (GTF-) annotation data for UCSC
+and Ensembl genomes.
+Data can be imported, merged, viewed, searched and saved (as .RData and 
+as SQLite database).
+There is also a C-routine for detection of overlapping (alignment) ranges
+with annotated regions.
 }
 \details{
 \tabular{ll}{

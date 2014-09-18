@@ -1,0 +1,56 @@
+ 
+## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
+ Change Log for package rbamtools
+## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
+
+Project   :     refGenome
+Created   :     19.03.2012
+Author    :     W. Kaisers
+Content   :     Funktionality for importing and managing genomic reference data
+                (Ucsc, Ensembl, Genbank)
+                for usage in R
+Version   :     1.2.8
+
+Changelog :
+05.06.12  :     addIsoforms and addEnsemble delete qualifier rows before
+                (re-) inserting
+06.06.12  :     Added correction in get_ens_attribute_df which removed a
+                memory leak
+                (Also the token_list module is now valgrind tested)
+
+08.06.12  :     Added class refdb         (encapsulates database access)
+09.06.12  :     Added class refDataLocations
+                (encapuslates directory and file management)
+
+13.06.12  :     Implementation updates for refGenome,ensembl,ucsc and
+                genbank finished
+
+26.11.12  :     Added function 'extractSeqids' and 'tableSeqids'
+08.05.13  :     refGenome_1.0.0 on CRAN
+09.05.13  :     Added class and function ensemblExons
+06.06.13  :     Added strand and frame in 'getGenePositions'
+17.07.13  :     Changed signature for 'extractByGeneName' 1.0.4
+                (so generic can be used in 'spliceSites')
+
+01.08.13  :     C-routines valgrind tested
+04.08.13  :     getGenePositions changed (doBy): >116 sec to 3.9 sec
+                runtime (1.0.6)
+
+04.08.13  :     Added getSpliceTable, unifyJuncs (1.0.7)
+05.08.13  :     Added getUnifiedJuncs, updated vignette (1.0.8)
+06.08.13  :     New getSplicSite and unifyJuncs in C (1.0.10),
+                valgrind tested
+
+07.08.13  :     refGenome_1.1.0 on CRAN
+08.08.13  :     Corrected generic for extractByGeneName (refGenome_1.1.0)
+
+07.07.14  :     Added R_init_refGenome
+08.07.14  :     Added overlapJuncs function (1.2.5)
+10.07.14  :     Added tests which are executed in R CMD check
+07.08.14  :     Added support for 'gene' entry in gtf table
+                (New feature type in Ensembl 76)
+
+
+## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
+## END OF FILE
+## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
