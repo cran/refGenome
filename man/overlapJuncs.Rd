@@ -2,7 +2,8 @@
 \alias{overlapJuncs}
 \title{overlapJuncs function}
 \description{
-Overlaps query gap-sites with annotated splice junctions.
+Overlaps query gap-sites (from BAM alignment data) with annotated 
+splice junctions (from reference genome annotation).
 }
 \usage{
 overlapJuncs(qry, junc)
@@ -19,7 +20,8 @@ overlapJuncs(qry, junc)
     %
 }
 \details{
-The function finds for each given gap-site. 
+The function finds optimal overlapping hits for alignment gap-sites in
+annotated splice-sites. 
 A gap-site is the combination of two genomic regions (= exons) which enclose
 an intermediary (= intron).
 The function identifies junction records which overlap with the given
@@ -76,7 +78,7 @@ Wolfgang Kaisers
 # A) Example query  data
 # + + + + + + + + + + + + + + + + + + #
 ##                          1       2       3       4       5       6       7 ##
-qry<-data.frame(id = 1:7, seqid = "1",
+qry <- data.frame(id = 1:7, seqid = "1",
             lstart = c(10100L, 11800L, 12220L, 12220L, 12220L, 32000L, 40000L),
             lend =   c(10100L, 12000L, 12225L, 12227L, 12227L, 32100L, 40100L),
             rstart = c(10200L, 12200L, 12057L, 12613L, 12650L, 32200L, 40200L),
@@ -87,15 +89,15 @@ qry<-data.frame(id = 1:7, seqid = "1",
 # B) Example reference data
 # + + + + + + + + + + + + + + + + + + #
 # B.1) Ensembl genome:
-ensfile<-system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
-ens<-loadGenome(ensfile)
-gp<-getGenePositions(ens)
+ensfile <- system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
+ens <- loadGenome(ensfile)
+gp <- getGenePositions(ens)
 # B.2) Ensembl junctions:
-junc<-getSpliceTable(ens)
+junc <- getSpliceTable(ens)
 # + + + + + + + + + + + + + + + + + + #
 # C) Do overlap
 # + + + + + + + + + + + + + + + + + + #
-res<-overlapJuncs(qry,junc)
+res <- overlapJuncs(qry, junc)
 }
 
 \keyword{overlap}

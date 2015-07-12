@@ -32,8 +32,6 @@ ens<-ensemblGenome()
 basedir(ens)<-system.file("extdata",package="refGenome")
 ens_gtf<-"hs.ensembl.62.small.gtf"
 read.gtf(ens,ens_gtf)
-tableAttributeTypes(ens)
-moveAttributes(ens,c("gene_name","transcript_name","exon_number"))
 ddx<-extractByGeneName(ens,"DDX11L1")
 ddx
 fam<-extractTranscript(ens,"ENST00000417324")

@@ -27,11 +27,11 @@ is extracted from the most abundand gene name.
 The function returns a data.frame with the following columns:
 \tabular{ll}{
   id \tab Numeric index for unique site.\cr
-  seqid \tab Package\cr
-  lstart \tab 1.0\cr
-  lend \tab 2012-10-06\cr
-  rstart \tab What license is it under?\cr
-  rend \tab methods\cr
+  seqid \tab Chromosome identifier\cr
+  lstart \tab left start\cr
+  lend \tab left end\cr
+  rstart \tab right start\cr
+  rend \tab right end \cr
   nSites \tab Number of \code{refJunctions} (transcripts) that contain this site.\cr
   gene_id \tab Gene identifier.\cr
   strand \tab Strand on which gene resides.\cr

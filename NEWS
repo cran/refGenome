@@ -1,9 +1,47 @@
+CHANGES IN VERSION 1.5.0
+-------------------------
+
+NEW FEATURES
+
+    o (none)
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o New C++ based import of GTF files due to import errors in Ensembl 76 (1.4.2). The attributes table and
+	related functions are removed.
+
+BUG FIXES
+
+    o The new GTF import mechanism is included because the former version produced an error.
+
+
+CHANGES IN VERSION 1.4.0
+-------------------------
+
+NEW FEATURES
+
+    o Added a 'unifiedExons' class and 
+
+    o Change compilation of source code to C++11 (from C)
+
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Added support for unification of exonic sites which can be used for counting alignments (reads)
+
+BUG FIXES
+
+    o (none)
+
+
 CHANGES IN VERSION 1.2.8
 -------------------------
 
 NEW FEATURES
 
     o Included this NEWS file and a ChangeLog file
+
+    o Added a unifyJuncs method: A method for unification of splice sites
 
     o Added overlapJuncs functions: A specialized routine for annotation of splice junctions
 

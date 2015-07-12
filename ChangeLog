@@ -50,6 +50,14 @@ Changelog :
 07.08.14  :     Added support for 'gene' entry in gtf table
                 (New feature type in Ensembl 76)
 
+25.02.15  :	Changed compilation mode of source code to C++11 (from C)
+25.02.15  :     Added unifiedExons class and unifyRanges function (1.4.0)
+
+30.06.15  :     New C++ based import of GTF files due to import errors
+                in Ensembl 76 (1.4.2). The attributes table and
+		associated functions are removed.
+                
+
 
 ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
 ## END OF FILE

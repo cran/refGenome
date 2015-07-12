@@ -4,6 +4,7 @@
 \alias{refExons-class}
 \alias{ensemblExons-class}
 \alias{ucscExons-class}
+\alias{unifiedExons-class}
 \alias{refExons}
 \alias{refExons-methods}
 \alias{refExons,refGenome-method}
@@ -15,6 +16,9 @@
 refExons represents genomic annotation data on exon-features for Ensembl
 and UCSC genomes.
 Relative locations of CDS, start_codon and stop_codon features are added.
+The unifiedExons class is intended to be used as preparation of exonic
+coordinates for counting of alignments (reads) inside these regions.
+In order to prevent ambiguities, overlaps are removed.
 }
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{refExons(rg)}.
@@ -64,6 +68,8 @@ ens<-loadGenome(ensfile)
 enex<-refExons(ens)
 saveGenome(enex,"enex.RData", useBasedir=FALSE)
 er<-loadGenome("enex.RData")
+# Unify exons
+uex <- unifyRanges(enex)
 
 # + + + + + + + + + + + + + + + + + + #
 # B) UCSC

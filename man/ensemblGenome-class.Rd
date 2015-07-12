@@ -8,10 +8,6 @@
 \alias{extractPaGenes-methods}
 \alias{extractPaGenes,ensemblGenome-method}
 %
-\alias{moveAttributes}
-\alias{moveAttributes-methods}
-\alias{moveAttributes,ensemblGenome-method}
-%
 \alias{tableTranscript.id}
 \alias{tableTranscript.id-methods}
 \alias{tableTranscript.id,ensemblGenome-method}
@@ -69,11 +65,12 @@ Objects can be created by calls of the form \code{ensemblGenome(dbfile)}.
         \item{setAttr}{\code{signature(object = "refGenome")}: 
             Writes content of attribute table.}
         %
-        \item{read.gtf}{\code{signature(object = "refGenome")}:
+        \item{read.gtf}{\code{signature(object, filename="transcripts.gtf", 
+            sep = "\t", useBasedir=TRUE, comment.char = "#",
+            progress=100000L, ...)}:
             Imports content of gtf file.
             This is the basic mechanism for data import. It works the
-            same way for ucscGenome and for ensemblGenome. The attribute items
-            are parsed and written in parts to gtf table and attribute table.}
+            same way for ucscGenome and for ensemblGenome.}
         %
         \item{extractPaGenes}{\code{signature(object="ensemblGenome")}: 
             Extracts all annotations on primary assembly. The function returns
@@ -126,14 +123,12 @@ Wolfgang Kaisers
 # + + + + + + + + + + + + + + + + + + + #
 # Create an instance from scratch
 # Real data:
-# ftp://ftp.ensembl.org/pub/release-70/gtf/homo_sapiens/Homo_sapiens.GRCh37.70.gtf.gz
+# ftp://ftp.ensembl.org/pub/release-80/gtf/homo_sapiens/Homo_sapiens.GRCh38.80.gtf.gz
 # + + + + + + + + + + + + + + + + + + #
 ens<-ensemblGenome()
 basedir(ens)<-system.file("extdata",package="refGenome")
 ens_gtf<-"hs.ensembl.62.small.gtf"
 read.gtf(ens,ens_gtf)
-tableAttributeTypes(ens)
-moveAttributes(ens,c("gene_name","transcript_name","exon_number"))
 # Loading of a saved genome:
 ensfile<-system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
 ens<-loadGenome(ensfile)

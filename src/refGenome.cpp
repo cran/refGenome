@@ -1,32 +1,18 @@
-/**************************************************************************************************
- **************************************************************************************************
+/*
+ * refGenome.cpp
  *
- * Project	:	refGenome
- * Created	:	19.03.2012
- * Author	:	W. Kaisers
- *
- * Content	:	Managing genomic reference data for usage in R
- *
- * Version	:	1.2.4
- *
- * Changelog	:
- * 04.Jun.12	:	get_ucsc_exon_bound_df	now has unique id-values for use as PRIM KEY
- * 06.Jun.12	:	Removed memory leak 	token_list module is now valgrind tested
- * 13.Jun.12	:	get_ens_attribute_df 	additionally has id row for use as PRIM KEY
- * 17.Okt.12	:	split_gtf_attr			Added function for splitting gtf attribute
- * 			column (valgrind tested)
- * 07.May.13    :   	Valgrind tested package examples
- * 08.May.13    :   	Corrected inline to static R_INLINE (in ptr_pair_list.h)
- *
- * 07.Jul.14	:	R_init_refGenome added
- * 08.Jul.14	:	get_cum_max and gap_overlap function added.
- *
- **************************************************************************************************
- **************************************************************************************************/
+ *  Created on: 25.02.2015
+ *      Author: kaisers
+ */
 
-#ifndef REFGENOME_C_
-#define REFGENOME_C_
+#ifndef REFGENOME_CPP_
+#define REFGENOME_CPP_
+
+
 #include "refGenome.h"
+
+
+extern "C" {
 
 static const int buf_size=2048; // buffer size for printing ints into chars
 
@@ -37,7 +23,7 @@ static const int buf_size=2048; // buffer size for printing ints into chars
 //
 // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
-SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
+SEXP get_splice_juncs(SEXP pTranscript,SEXP pId, SEXP pStart, SEXP pEnd)
 {
 	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Expects that pTranscript is ordered
@@ -46,18 +32,26 @@ SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
 	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
 	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	// Check incoming
-	if(TYPEOF(pTranscript)!=INTSXP)
-		error("[get_splice_juncs] pTranscript must be INT!");
-	if(TYPEOF(pId)!=INTSXP)
-		error("[get_splice_juncs] pId must be INT!");
-	if(TYPEOF(pStart)!=INTSXP)
-		error("[get_splice_juncs] pStart must be INT!");
-	if(TYPEOF(pEnd)!=INTSXP)
-		error("[get_splice_juncs] pEnd must be INT!");
+	// Check incoming args
 
-	int inRow=LENGTH(pTranscript);
-	if((LENGTH(pId)!=inRow) | (LENGTH(pStart)!=inRow) | (LENGTH(pEnd)!=inRow))
+	if( !Rf_isInteger(pTranscript) )
+		error("first argument must be a integer, found %s",
+				type2char(TYPEOF(pTranscript)));
+
+	if( !Rf_isInteger(pId) )
+		error("second argument must be a integer, found %s",
+				type2char(TYPEOF(pId)));
+
+	if( !Rf_isInteger(pStart) )
+		error("third argument must be a integer, found %s",
+				type2char(TYPEOF(pStart)));
+
+	if( !Rf_isInteger(pEnd) )
+		error("fourth argument must be a integer, found %s",
+				type2char(TYPEOF(pEnd)));
+
+	unsigned inRow = (unsigned) LENGTH(pTranscript);
+	if(((unsigned) LENGTH(pId) != inRow) | ((unsigned)LENGTH(pStart)!=inRow) | ((unsigned)LENGTH(pEnd)!=inRow))
 		error("[get_splice_juncs] All arguments must have same length!");
 
 
@@ -68,7 +62,7 @@ SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd)
 	// Count number of splice junctions
 	// = Number of row pairs where tr[i]==tr[i+1]
 	unsigned nJunc=0, i,j;
-	for(i=1,j=0;i<inRow;++i,++j)
+	for(i=1, j=0; i < inRow; ++i, ++j)
 	{
 		if(tr[i]==tr[j])
 			++nJunc;
@@ -220,7 +214,7 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Check all subsequent rows for position equality
 	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	for(i=1;i<n;++i)
+	for(i=1; i<n; ++i)
 	{
 		if((seqid[i]!=usq) | (lend[i]!=ule) | (rstart[i]!=urs))
 		{
@@ -388,7 +382,7 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 			// Count geneId's
 			for(k=0;k<nGenes;++k)
 			{
-				if(gid[i]==geneId[k])
+				if((unsigned) gid[i] == geneId[k])
 				{
 					++(geneCt[k]);
 					break;
@@ -539,6 +533,92 @@ SEXP get_exon_number(SEXP pTranscript,SEXP pSeqid, SEXP pStart, SEXP pEnd)
 	return res;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Removes overlaps between annotated regions
+///////////////////////////////////////////////////////////////////////////////////////////////////
+SEXP unify_genomic_ranges(SEXP pId, SEXP pSeqid, SEXP pBegin, SEXP pEnd)
+{
+	if(TYPEOF(pId) != INTSXP)
+		error("pId must be Integer!");
+
+	if(TYPEOF(pSeqid) != INTSXP)
+		error("pSeqid must be Integer!");
+
+	if(TYPEOF(pBegin) != INTSXP)
+		error("pBegin must be Integer!");
+
+	if(TYPEOF(pEnd) != INTSXP)
+		error("pEnd must be Integer!");
+
+	int i, n = length(pId);
+
+	if(length(pSeqid) != n)
+		error("pId and pSeqid must have equal length!");
+
+	if(length(pBegin) != n)
+		error("pId and pBegin must have equal length!");
+
+	if(length(pEnd) != n)
+		error("pId and pEnd must have equal length!");
+
+	int *id = INTEGER(pId);
+	int *seqid = INTEGER(pSeqid);
+	int *begin = INTEGER(pBegin);
+	int *end = INTEGER(pEnd);
+
+
+	grange_list l;
+	grange last;
+	last.seqid = 0;
+
+	i=0;
+	last.id = id[i];
+	last.seqid = seqid[i];
+	last.begin = begin[i];
+	last.end = end[i];
+	l.push_back(last);
+
+	for(++i; i < n; ++i)
+	{
+		// New seqid
+		if(seqid[i] > last.seqid)
+		{
+			last.id = id[i];
+			last.seqid = seqid[i];
+			last.begin = begin[i];
+			last.end = end[i];
+			last.ub_shift = 0;
+			l.push_back(last);
+		}else{
+			// No overlap
+			if(begin[i] > last.end)
+			{
+				last.id = id[i];
+				last.begin = begin[i];
+				last.end = end[i];
+				last.ub_shift = 0;
+				l.push_back(last);
+
+			}else{
+				// Partial overlap:
+				// Introduces shift of begin position
+				if(end[i] > last.end)
+				{
+					last.id = id[i];
+					last.ub_shift = last.begin;
+					last.begin = last.end + 1;
+					last.ub_shift = last.begin - last.ub_shift;
+					last.end = end[i];
+					l.push_back(last);
+				}
+			}
+		}
+	}
+
+	return data_frame(l);
+}
+
+
 
 
 // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
@@ -578,17 +658,17 @@ SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refs
 	unsigned nRows=LENGTH(qryid);
 	if(nRows==0)
 		error("[overlap_ranges] qryid had length zero!");
-	if(LENGTH(qrystart)!=nRows)
+	if( (unsigned) LENGTH(qrystart)!=nRows)
 		error("[overlap_ranges] length(qrystart)!=length(qryid)!");
-	if(LENGTH(qryend)!=nRows)
+	if( (unsigned) LENGTH(qryend)!=nRows)
 		error("[overlap_ranges] length(qryend)!=length(qryid)!");
 
 	unsigned nRef=LENGTH(refid);
 	if(nRef==0)
 		error("[overlap_ranges] refid has length zero!");
-	if(LENGTH(refstart)!=nRef)
+	if((unsigned) LENGTH(refstart)!=nRef)
 		error("[overlap_ranges] length(refstart)!=length(refid)!");
-	if(LENGTH(refend)!=nRef)
+	if((unsigned) LENGTH(refend)!=nRef)
 		error("[overlap_ranges] length(refstart)!=length(refend)!");
 
 	// read args
@@ -800,6 +880,7 @@ SEXP overlap_ranges(SEXP qryid, SEXP qrystart, SEXP qryend, SEXP refid,SEXP refs
 	return dflist;
 }
 
+/*
 // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +#
 //                                                                                                  #
 // Split gtf Attribute column data                                                                  #
@@ -844,7 +925,7 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	unsigned long int i,n;
 
 	n=LENGTH(id_vec);
-	if(LENGTH(attr_vec)!=n)
+	if( (unsigned) LENGTH(attr_vec) != n)
 		error("[split_gtf_attr] id_vec and attr_vec must have same length!\n");
 
 	unsigned nProtected=0;
@@ -880,7 +961,7 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
 	ptr_pair_list *l=ptr_pair_list_init();
-	for(i=0;i<n;++i)
+	for(i = 0; i < n; ++i)
 	{
 		INTEGER(idvec)[i]=id[i];
 		iter=CHAR(STRING_ELT(attr_vec,i));
@@ -911,7 +992,10 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 			if((*iter != 't') && (attr_index == 2))
 			{
 				if( (*iter != 't') && (*iter != 'g'))
+				{
+					Rprintf("[split_gtf_attr] In line %i: '%s'\n", i + 1, CHAR(STRING_ELT(attr_vec,i)));
 					error("[split_gtf_attr] Second item must be 'transcript_id' or 'gene_name': '%s'!", iter);
+				}
 			}
 
 			// proceed until space and take length
@@ -919,10 +1003,14 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 				++iter;
 
 			if(*iter == zero)
-				error("[split_gtf_attr] Found end of string in first token in line %lu: '%s'!\n",i+1,iter);
+				error("[split_gtf_attr] Found end of string in first token in line %lu: '%s'!\n",i + 1, iter);
+
 
 			if(iter == token_first)
+			{
+				Rprintf("[split_gtf_attr] In line %i: '%s'\n", i + 1, CHAR(STRING_ELT(attr_vec,i)));
 				error("[split_gtf_attr] First token ist empty: '%s'!\n",iter);
+			}
 
 			first_len = iter - token_first;
 
@@ -948,7 +1036,10 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 
 			// second token must be terminated by delim
 			if(*iter!=delim)
+			{
+				Rprintf("[split_gtf_attr] In line %i: '%s'\n", i + 1, CHAR(STRING_ELT(attr_vec,i)));
 				error("[split_gtf_attr] Second token must end on ';': '%s'!",token_second);
+			}
 			++iter;
 
 			// There may be terminating spaces
@@ -974,16 +1065,16 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	//  Create output data.frames
 	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	int nCols, nRows;
+	unsigned nCols, nRows;
 	char buf[20];
 
 	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 	// Merge id,gene_id and transcript_id into idflist data.frame
 	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	nCols=3;
-	nRows=n;
+	nCols = 3;
+	nRows = (unsigned) n;
 	SEXP idflist;
-	PROTECT(idflist=allocVector(VECSXP,nCols));
+	PROTECT(idflist = allocVector(VECSXP,nCols));
 	++nProtected;
 
 	SET_VECTOR_ELT(idflist,0,idvec);
@@ -1005,7 +1096,7 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	PROTECT(irow_names=allocVector(STRSXP,nRows));
 	++nProtected;
 
-	for(i=0;i<nRows;++i)
+	for(i=0; i<nRows; ++i)
 	{
 		sprintf(buf,"%lu",i+1);
 		SET_STRING_ELT(irow_names,i,mkChar(buf));
@@ -1017,8 +1108,8 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	// Merge id, type, value into adflist data.frame
 	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
 
-	nCols=3;
-	nRows=l->size;
+	nCols = 3;
+	nRows = (unsigned) l->size;
 
 	// Column 0: id
 	SEXP aid_vector;
@@ -1041,7 +1132,7 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	for(i=0;i<nRows;++i)
 	{
 		e=ptr_pair_list_get_next_element(l);
-		INTEGER(aid_vector)[i]=e->id;
+		INTEGER(aid_vector)[i] = (int) e->id;
 		SET_STRING_ELT(atype_vector,i,Rf_mkCharLen(e->first,e->first_len));
 		SET_STRING_ELT(aval_vector,i,Rf_mkCharLen(e->second,e->second_len));
 	}
@@ -1104,6 +1195,139 @@ SEXP split_gtf_attr(SEXP id_vec,SEXP attr_vec)
 	UNPROTECT(nProtected);
 	return ans;
 }
+*/
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+// Import data from GTF files
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+// First eight columns:
+// 1	seqname
+// 2	source
+// 3	feature	e.g. "CDS", "start_codon", "stop_codon", "exon"
+// 4	start 	(1-based)
+// 5	end 		(inclusive)
+// 6	score	(0 - 1000), No score = "."
+// 7	frame	(0-2), Not a coding exon: "."
+// 8	group = attributes (variable content)
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+
+
+static void print_progress(size_t n) { Rprintf("\r[GTF] %8lu lines processed.", n); }
+
+static void do_fill_char(size_t s, const char* value, void *o)
+{
+	atmptr<char> *column = (atmptr<char> *) o;
+	// Change from 1-based to 0-based index
+	column->set( ((int) s) - 1, value);
+}
+
+static void do_fill_int(size_t s, const char* value, void *o)
+{
+	atmptr<int> *column = (atmptr<int> *) o;
+	// Change from 1-based to 0-based index
+	(*column)[((int) s) - 1] = (int) atol(value);
+}
+
+
+SEXP read_gtf(SEXP pParam, SEXP pProgress)
+{
+	  if( !Rf_isString(pParam) )
+	      error("first argument must be a string, found %s",
+	            type2char(TYPEOF(pParam)));
+
+	atmptr<int> pi(pProgress);
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	// Extract pParam values
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	std::ifstream infile(CHAR(STRING_ELT(pParam, 0)));
+	if(!infile.is_open())
+		error("File not found.");
+	char comment = CHAR(STRING_ELT(pParam, 1))[0];
+	char delim = CHAR(STRING_ELT(pParam, 2))[0];
+
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	// Open file and process file content
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	gtf::gtf_file gtf(delim);
+	gtf.process_lines(infile, pi[0], print_progress, comment);
+	Rprintf("\n");
+	infile.close();
+
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	// Create empty data.frame for output
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	typedef std::list<std::pair<size_t, std::string> > lps;
+	lps map_data = gtf.map_data();
+	unsigned nrow = (unsigned) gtf.size();
+	unsigned  n_map = (unsigned) map_data.size();
+	unsigned ncol = n_map + 9;
+	data_frame dfr(nrow, ncol);
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	// Add column data to data.frame
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	dfr.addIdColumn();
+
+	// Add fixed GFF columns
+	atmptr<char> seqname(nrow);
+	gtf.fill_seqname(do_fill_char, &seqname);
+	dfr.addColumn(seqname, "seqid");
+
+	atmptr<char> source(nrow);
+	gtf.fill_source(do_fill_char, &source);
+	dfr.addColumn(source, "source");
+
+	atmptr<char> feature(nrow);
+	gtf.fill_feature(do_fill_char, &feature);
+	dfr.addColumn(feature, "feature");
+
+	atmptr<int> start(nrow);
+	gtf.fill_start(do_fill_int, &start);
+	dfr.addColumn(start, "start");
+
+	atmptr<int> end(nrow);
+	gtf.fill_end(do_fill_int, &end);
+	dfr.addColumn(end, "end");
+
+	atmptr<char> score(nrow);
+	gtf.fill_score(do_fill_char, &score);
+	dfr.addColumn(score, "score");
+
+	atmptr<char> strand(nrow);
+	gtf.fill_strand(do_fill_char, &strand);
+	dfr.addColumn(strand, "strand");
+
+	atmptr<char> frame(nrow);
+	gtf.fill_frame(do_fill_char, &frame);
+	dfr.addColumn(frame, "frame");
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	// Add (variable) attribute - columns data to data.frame
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	lps::const_iterator iter;
+	for(iter=map_data.begin(); iter != map_data.end(); ++iter)
+	{
+		atmptr<char> col_data(nrow, true);
+		gtf.proc_attr_feature(iter->second.c_str(), do_fill_char, &col_data);
+		dfr.addColumn(col_data, iter->second.c_str());
+	}
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	// Return
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	return dfr;
+}
+
+
+
+
 
 SEXP get_cum_max(SEXP pVal)
 {
@@ -1111,8 +1335,10 @@ SEXP get_cum_max(SEXP pVal)
 	int *val, *res;
 
 	// Check type of incoming args
-	if(TYPEOF(pVal)!=INTSXP)
-		error("[get_cum_max] pVal is not INT!\n");
+	  if( !Rf_isInteger(pVal) )
+	      error("argument must be an integer, found %s",
+	            type2char(TYPEOF(pVal)));
+
 
 	n = LENGTH(pVal);
 	if(n == 0)
@@ -1331,7 +1557,6 @@ SEXP gap_overlap(SEXP pQid, SEXP pQlstart, SEXP pQlend, SEXP pQrstart, SEXP pQre
 		res_adv[i] = 0;
 
 		// reset to empty values
-
 		//Rprintf("[gap_overlap] New qry: i=%3i qid= %3i j=%3i + + + + + \n", i, res_qid[i], j);
 
 		// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
@@ -1340,7 +1565,7 @@ SEXP gap_overlap(SEXP pQid, SEXP pQlstart, SEXP pQlend, SEXP pQrstart, SEXP pQre
 
 		// 1.1 Reference: Step back before first hit
 		//Rprintf("[gap_overlap] Reverse: ");
-		while(j > 0 && (qLstart[i] <= rMaxRend[j]))
+		while( (qLstart[i] <= rMaxRend[j]) && j > 0)
 		{
 			//Rprintf("%2i ",j);
 			--j;
@@ -1349,10 +1574,10 @@ SEXP gap_overlap(SEXP pQid, SEXP pQlstart, SEXP pQlend, SEXP pQrstart, SEXP pQre
 		//Rprintf("\n");
 
 		// 1.2 Reference: Advance to first hit
-		//Rprintf("[gap_overlap] Advance: ");
-		while(j < nr && (qLstart[i] > rMaxRend[j] ))
+		//Rprintf("[gap_overlap] Advance: \n");
+		while( j < nr && (qLstart[i] > rMaxRend[j]))
 		{
-			//Rprintf("%2i",j);
+			//Rprintf("[gap_overlap] Advance i: %2i, j: %2i\tqLstart: %5i, rMaxRend: %5i\n",i,j, qLstart[i], rMaxRend[j]);
 			++j;
 			++res_adv[i];
 		}
@@ -1393,7 +1618,7 @@ SEXP gap_overlap(SEXP pQid, SEXP pQlstart, SEXP pQlend, SEXP pQrstart, SEXP pQre
 
 		// 3.2 Do traverse + identify best hit (= lowest sod)
 		//Rprintf("[gap_overlap] i=%2i j=%2i qid=%2i Hits: ", i,j, res_qid[i]);
-		while(j < nr && (qRend[i] >= rLstart[j]))
+		while((qRend[i] >= rLstart[j]) && j < nr)
 		{
 			// Actual overlap ?
 			if(qLstart[i] < rRend[j] && qRend[i] > rLstart[j])
@@ -1497,10 +1722,12 @@ SEXP gap_overlap(SEXP pQid, SEXP pQlstart, SEXP pQlend, SEXP pQrstart, SEXP pQre
 void R_init_refGenome(DllInfo *info)
 {
 	R_CallMethodDef cmd[] ={
-			{ "split_gtf_attr",			(DL_FUNC) &split_gtf_attr,			2},
+			//{ "split_gtf_attr",			(DL_FUNC) &split_gtf_attr,			2},
+			{ "read_gtf",				(DL_FUNC) &read_gtf,                2},
 			{ "get_exon_number",		(DL_FUNC) &get_exon_number,       	4},
 			{ "get_splice_juncs",		(DL_FUNC) &get_splice_juncs,		4},
 			{ "unify_splice_juncs",		(DL_FUNC) &unify_splice_juncs,		8},
+			{ "unify_genomic_ranges",	(DL_FUNC) &unify_genomic_ranges,	4},
 			{ "overlap_ranges",			(DL_FUNC) &overlap_ranges,			6},
 			{ "get_cum_max",			(DL_FUNC) &get_cum_max,				1},
 			{ "gap_overlap",			(DL_FUNC) &gap_overlap,			   11},
@@ -1511,5 +1738,7 @@ void R_init_refGenome(DllInfo *info)
 }
 
 
-#endif	/* REFGENOME_C_ */
 
+} // extern "C"
+
+#endif	/* REFGENOME_CPP_ */

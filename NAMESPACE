@@ -5,6 +5,7 @@ import(utils)
 importFrom(doBy,summaryBy)
 importFrom(DBI, dbDriver)
 importFrom(RSQLite, dbConnect, dbDisconnect,  dbWriteTable, dbReadTable, dbExistsTable)
+importFrom(graphics, plot)
 exportMethods(
     addIsCoding,
     addIsoforms,
@@ -20,21 +21,19 @@ exportMethods(
     getGenePositions,
     getGeneTable,
     getSpliceTable,
-    moveAttributes,
-    getAttr,
     getGtf,
     initialize,
+    plotUbs,
     read.gtf,
     refExons,
     saveGenome,
-    setAttr,
     setGtf,
-    tableAttributeTypes,
     tableFeatures,
     tableSeqids,
     tableTranscript.id,
     tableTranscript.name,
     unifyJuncs,
+    unifyRanges,
     writeDB,
     getXref
 )
@@ -43,6 +42,7 @@ exportClasses(
      ensemblGenome,
      ensemblExons,
      ensemblJunctions,
+     unifiedExons,
      ucscExons,
      ucscGenome,
      ucscJunctions

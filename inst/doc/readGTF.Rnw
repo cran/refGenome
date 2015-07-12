@@ -1,0 +1,288 @@
+%\VignetteIndexEntry{Introduction}
+%\VignettePackage{refGenome}
+\documentclass[a4paper]{article}
+
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+
+% Imported from Biobase package:
+\newcommand{\R}{{\textsf{R}}}
+\newcommand{\code}[1]{{\texttt{#1}}}
+\newcommand{\term}[1]{{\emph{#1}}}
+\newcommand{\Rpackage}[1]{\textsf{#1}}
+\newcommand{\Rfunction}[1]{\texttt{#1}}
+\newcommand{\Robject}[1]{\texttt{#1}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\Rmethod}[1]{{\textit{#1}}}
+\newcommand{\Rfunarg}[1]{{\textit{#1}}}
+
+
+\newcommand{\rtx}[1]{{\textsf{#1}}}
+\newcommand{\rcl}[1]{{\texttt{#1}}}
+\newcommand{\rfc}[1]{{\texttt{#1}}}
+\newcommand{\robj}[1]{{\texttt{#1}}}
+
+\title{Reading GTF files}
+\author{Wolfgang Kaisers, CBiBs HHU Dusseldorf}
+\date{\today}
+
+\setlength\parindent{0pt} % \noindent for each paragraph
+
+\begin{document}
+\maketitle
+\SweaveOpts{concordance=TRUE}
+
+
+<<echo=FALSE>>=
+options(width=60)
+@
+
+\section{GTF file format}
+
+The definition for GTF file format can be found on the UCSC FAQ page
+\url{http://genome.ucsc.edu/FAQ/FAQformat.html}.
+
+GTF is based on GFF file format.
+
+\subsection{GFF format}
+
+The GFF file format defines text file format. Each record is located within
+one line.
+GFF defines nine mandatory tab separated columns.\\
+
+\begin{tabular}{l l l l}
+    \hline
+        Nr & Name     & Type     & Content\\
+    \hline
+    \hline
+        1  & seqname  & text     & Sequence name\\
+        2  & source   & text     & Program which created record\\
+        3  & feature  & text     & Type (e.g. exon)\\
+        4  & start    & integer  & 1-based start position\\
+        5  & end      & integer  & Inclusive end position\\
+        6  & score    & text     & Number between 0 and 1000 ("." = empty value)\\
+        7  & strand   & text     & '+' or '-' or '.'\\
+        8  & frame    & text     & Number between 0 and 2 or ".".\\
+        9  & group    & text     & GTF attributes\\
+    \hline
+\end{tabular}\\
+\vspace{1 em}
+\\
+
+\subsection{GTF extension of GFF}
+
+In GTF, the last \rcl{group} column is composed of attributes.
+Each attribute consists of a type / value pair.
+Attributes are separated by "; " (semicolon and one space).
+\rcl{type} and \rcl{value} are separated by one space. Values are
+enclosed in quotation marks (").
+
+\paragraph{Example}
+\begin{verbatim}
+gene_id "ENSG00000227232"; transcript_id "ENST00000438504"
+\end{verbatim}
+
+
+
+
+\section{R interface}
+
+Import of GTF files inside the refGenome package is done by the \rfc{read.gtf}
+function. \rfc{read.gtf} calls \rfc{read\_gtf} via \rfc{.Call}.
+
+\section{C Interface}
+
+The source of \rfc{read\_gtf} is located in refGenome.cpp. Inside 
+\rfc{read\_gtf} a
+\robj{gtf::gtf\_file} C++ object is created which
+performs line wise parsing.
+
+The obtained result is then copied into a \rcl{data.frame}. The R 
+interface to \rcl{data.frame} is encapsulated in a \rcl{data\_frame} C++
+object.
+
+The column vectors of the \rcl{data.frame} are contained in \rcl{atmptr} C++
+objects (the name is a modification of the R extptr type for atomic objects.)
+GFF derived column values are copied by name.
+
+The content of the variable attribute column is added by iteration through
+the (gtf\_attribute) container.
+
+
+\section{The C++ GTF classes}
+
+Definition of the \robj{gtf\_file} C++ class is located in the 'gtf.h' header
+file inside the 'gtf' namespace.
+
+\subsection{The gtf\_file class}
+
+The gtf\_file class encapsulates the global functionality for parsing GTF files.
+The main data content is carried by a list of \robj{gff\_element} objects and
+a \robj{gtf\_attribute} class.
+
+GTF file content is parsed linewise via getline. A line is parsed by static
+extraction of the first eight columns.
+
+The last column is extracted using the \robj{gtf\_attribute} class.
+
+\subsubsection{GTF attributes}
+
+Because the GTF format definition does not include number or type of attributes,
+a parsing algorithm needs to keep an unkown number of values of an unkown
+number of types. Each data record (line) is identified by a unique integral 
+id.
+
+The decision here was to use hash table implemented by std::unordered\_map 
+(included by <unordered\_map>).
+The map uses the attribute type as key value. Therefore only a small number of
+keys exist.
+Each map element consists of a list of id / value pairs. A GTF attribute is
+added by pushing back the id / value pair to the list residing as map-element
+in the unordered\_map.
+
+The values are retrieved by iteration through the unordered\_map. Each map 
+element defines a new column in the returned \robj{data.frame}. The 
+stored id values serve as row indices.
+
+\paragraph{An alternative} implementation would have been a linked list
+containing id, type, value triples which could have been passed back to R
+inside a data.frame with tree columns.
+Further separation could then be done by sequentially 
+extraction of items for all present types inside R.
+
+\section{C++ interface for R types}
+
+A C++ interface for some R types is included. The basic idea behind
+this interface is that it simple enough to be contained in a few small
+header files.
+
+We describe three C++ classes which are defined in two header files.\\
+
+\begin{table}
+\centering
+\begin{tabular}[ht]{l l l}
+    \hline
+        Class & Header file     & Function\\
+    \hline
+        extptr      & extptr.h      & EXTPTR type for C++ pointer\\
+        atmptr      & extptr.h      & Atomic objects (e.g. INTSXP)\\
+        data\_frame  & data\_frame.h  & data.frame objects\\
+    \hline
+\end{tabular}\\
+\end{table}
+\vspace{1 em}
+
+\subsection{extptr}
+
+The exptr class is designed for usage of external C or C++ pointers.
+Inside R, external pointers are accessed via EXTPTRSXP types. In order
+to prevent memory leaks, a finalizer routine needs to be registered.
+
+The extptr class internally uses shared\_ptr objects (defined in 
+<memory> header.)
+
+The following example shows how extptr objects can be used.
+\begin{verbatim}
+#include "extptr.h"
+
+SEXP use_my_class(SEXP pArg)
+{
+    extptr<my_class> arg(pArg);
+    arg->exec_function();
+    return arg;
+}
+\end{verbatim}
+
+
+
+\subsection{atmptr}
+
+The atmptr class defines operators
+\begin{itemize}
+    \item operator*
+    \item operator->
+    \item operator[]
+    \item operator SEXP
+\end{itemize}
+which allow using these objects in almost the same way as SEXP objects.
+Only, atmptr variables are typed and there is no need to care about
+protection.\\
+
+The class is implemented as template using template specialisations.
+
+\subsubsection{Integer vectors}
+
+A simple example shows how atmptr objects can be used.
+\begin{verbatim}
+#include "extptr.h"
+
+SEXP square(SEXP pArg)
+{
+    atmptr<int> arg(pArg);
+    
+    int i, n = length(arg);
+    atmptr<int> pRes(n);
+    
+    for(i=0; i < n; ++i)
+        pRes[i] = arg[i]^2;
+        
+    return pRes;
+}
+\end{verbatim}
+
+\subsubsection{String vectors}
+
+For strings, the situation is more complicated because string vectors
+cannot be simply implemented in arrays.
+
+\begin{verbatim}
+#include "extptr.h"
+
+SEXP get_str()
+{
+    vector<string> v;
+    // do fill vector ...
+
+    unsigned i, n = v.size();
+    atmptr<char> res(n);
+
+    for(i=0; i < n; ++i)
+        res.set(i, v[i]);
+        
+    return res;
+}
+\end{verbatim}
+
+\subsection{Data frames}
+
+The \rcl{data\_frame} class implements construction details for R data.frame's.
+
+The following example shows how to create a data.frame object.
+\begin{verbatim}
+#include "extptr.h"
+#include "data_frame.h"
+
+SEXP create_data_frame()
+{
+    int nrow = 3, ncol=4;
+    data_frame dfr(nrow, ncol);
+    
+    // Add ID - column ("id")
+    dfr.addIdColumn();
+    
+    atmptr<char> type(nrow);
+    // fill types ....
+    dfr.addColumn(type, "type");
+    
+    atmptr<int> values(nrow);
+    // fill values ...
+    dfr.addColumn(values, "value")
+    
+    return dfr;
+}
+\end{verbatim}
+The data\_frame constructor adds row.names consisting of consecutive integer
+numbers starting at 1.
+
+
+\end{document}

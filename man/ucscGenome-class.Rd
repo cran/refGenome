@@ -57,12 +57,12 @@ Objects can be created by calls of the form \code{ucscGenome()}.
         \item{setAttr}{\code{signature(object = "refGenome")}:
             Writes content of attribute table. }
         %
-        \item{read.gtf}{\code{signature(object = "refGenome")}: 
+        \item{read.gtf}{\code{signature(object, filename="transcripts.gtf",
+            sep = "\t", useBasedir=TRUE, comment.char = "#", 
+            progress=100000L, ...)}: 
             Imports content of gtf file.
             This is the basic mechanism for data import.
-            It works the same way for ucscGenome and for ensemblGenome. 
-            The attribute items are parsed and written in parts to gtf table
-            and attribute table.  }
+            It works the same way for ucscGenome and for ensemblGenome.}
         %
         \item{writeDB}{\code{signature(object = "refGenome")}:
             Copies content of gtf, attr and xref table to database. }

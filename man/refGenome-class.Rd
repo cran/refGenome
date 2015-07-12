@@ -3,46 +3,48 @@
 \docType{class}
 \alias{refGenome-class}
 \alias{initialize,refGenome-method}
+%
 \alias{basedir}
 \alias{basedir-methods}
 \alias{basedir,refGenome-method}
+%
 \alias{basedir<-}
 \alias{basedir<--methods}
 \alias{basedir<-,refGenome-method}
+%
 \alias{extractFeature}
 \alias{extractFeature-methods}
 \alias{extractFeature,refGenome-method}
+%
 \alias{extractSeqids}
 \alias{extractSeqids-methods}
 \alias{extractSeqids,refGenome-method}
+%
 \alias{extractTranscript}
 \alias{extractTranscript-methods}
 \alias{extractTranscript,refGenome-method}
+%
 \alias{getGtf}
 \alias{getGtf-methods}
 \alias{getGtf,refGenome-method}
+%
 \alias{setGtf}
 \alias{setGtf-methods}
 \alias{setGtf,refGenome-method}
-\alias{getAttr}
-\alias{getAttr-methods}
-\alias{getAttr,refGenome-method}
-\alias{setAttr}
-\alias{setAttr-methods}
-\alias{setAttr,refGenome-method}
-\alias{read.gtf}
-\alias{read.gtf-methods}
-\alias{read.gtf,refGenome-method}
-\alias{tableAttributeTypes}
-\alias{tableAttributeTypes-methods}
-\alias{tableAttributeTypes,refGenome-method}
+%
 \alias{tableSeqids}
 \alias{tableSeqids-methods}
 \alias{tableSeqids,refGenome-method}
+%
 \alias{ucPrimAssembly}
 \alias{ensPrimAssembly}
-
+%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
+%% Title
+%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
 \title{Class \code{"refGenome"}}
+%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
+%% Description
+%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
 \description{
 refGenome class: Virtual base class for ucscGenome and ensemblGenome.
 }
@@ -78,27 +80,12 @@ dbfile represents SQLite database file.
             expressions that allow extraction of primary assemblies for UCSC
             and Ensembl respectively.}
         %
-        \item{getGtf}{\code{signature(object = "refGenome")}:
-            Returns content of gtf table.}
-        %
-        \item{setGtf}{\code{signature(object = "refGenome")}:
-            Writes content of gtf table.}
-        %
-        \item{getAttr}{\code{signature(object = "refGenome")}:
-            Returns content of attribute table.}
-        %
-        \item{setAttr}{\code{signature(object = "refGenome")}:
-            Writes content of attribute table.}
-        %
-        \item{read.gtf}{\code{signature(object = "refGenome")}: 
+        \item{read.gtf}{\code{signature(object, filename="transcripts.gtf", 
+            sep = "\t",  useBasedir=TRUE, comment.char = "#",
+            progress=100000L, ...)}: 
             Imports content of gtf file. 
             This is the basic mechanism for data import. 
-            It works the same way for ucscGenome and for ensemblGenome. 
-            The attribute items are parsed and written in parts to gtf table
-            and attribute table.}
-        %
-        \item{tableAttributeTypes}{\code{signature(object= "refGenome")}:
-            Prints out number of rows for each type in attribute table.}
+            It works the same way for ucscGenome and for ensemblGenome.}
         %
         \item{saveGenome}{\code{signature(object = "refGenome",
             filename="character", useBasedir="logical")}: 
