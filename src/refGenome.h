@@ -9,9 +9,6 @@
 #define REFGENOME_H_
 
 
-#include "range_partition.h" 	// Needs to be included at first place (partition class...)
-
-
 // Must be included before R header because of
 // collision with Rinternals length makro -> Rf_length(x)
 #include <fstream>

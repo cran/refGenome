@@ -1,5 +1,5 @@
 ca303894d762795291f9bc88786a4e46 *ChangeLog
-81a98c8c9ead62ab5ab1c6c27f5317bc *DESCRIPTION
+a437d68c90f4790555cd8bb7a997bac5 *DESCRIPTION
 0c82b29198a53addfe993adfa99734a8 *NAMESPACE
 ed56ec56d9244ad6d0e2214eb96c8d3e *NEWS
 5156421271a48667aafb4f6a4f827d20 *R/refGenome.r
@@ -36,9 +36,8 @@ fdcb62e6e8b0a4b3e20e136653d47418 *src/data_frame.h
 13305d496be02520f822bde043239962 *src/extptr.h
 493dcaf7d56b8f0d7fcb5508989c1af9 *src/grange.h
 6da4222e3dbebf4fba41eaf4199b19fc *src/gtf.h
-dc296a8a18c64ed061a6e39de50d54b7 *src/range_partition.h
 17a1adaced23fab2a520e844aae35757 *src/refGenome.cpp
-1f64efb79a92caa0a29fa88f828449ba *src/refGenome.h
+23b74a2363d531e4edb582eb85581503 *src/refGenome.h
 a6fff68c8e994266395c298b63e23877 *src/tokenize.h
 f9dd7baf4e4ac9f28e0e0357396fcfb5 *tests/test-all.R
 05bf58d34d6a1e19d49c984fba6e8673 *tests/test_overlap_juncs.r
