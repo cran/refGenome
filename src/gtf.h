@@ -51,53 +51,53 @@ public:
 	ssci parse_gff(ssci begin, ssci end, size_t id, char c='\t')
 	{
 		id_=id;
-		string::const_iterator iter;
+		std::string::const_iterator iter;
 
 		// seqname
-		iter = find(begin, end, c);
-		seqname_ = string(begin, iter);
+		iter = std::find(begin, end, c);
+		seqname_ = std::string(begin, iter);
 		if(iter == end) return end;
 		begin=++iter;
 
 		// source
-		iter = find(begin, end, c);
-		source_ = string(begin, iter);
+		iter = std::find(begin, end, c);
+		source_ = std::string(begin, iter);
 		if(iter == end)	return end;
 		begin=++iter;
 
 		// feature
-		iter = find(begin, end, c);
-		feature_ = string(begin, iter);
+		iter = std::find(begin, end, c);
+		feature_ = std::string(begin, iter);
 		if(iter==end) return end;
 		begin= ++iter;
 
 		// start
-		iter = find(begin, end, c);
-		start_ = string(begin, iter);
+		iter = std::find(begin, end, c);
+		start_ = std::string(begin, iter);
 		if(iter==end) return end;
 		begin=++iter;
 
 		// end
-		iter = find(begin, end, c);
-		end_ = string(begin, iter);
+		iter = std::find(begin, end, c);
+		end_ = std::string(begin, iter);
 		if(iter==end) return end;
 		begin=++iter;
 
 		// score
-		iter = find(begin, end, c);
-		score_ = string(begin, iter);
+		iter = std::find(begin, end, c);
+		score_ = std::string(begin, iter);
 		if(iter==end) return end;
 		begin=++iter;
 
 		// strand
-		iter = find(begin, end, c);
-		strand_ = string(begin, iter);
+		iter = std::find(begin, end, c);
+		strand_ = std::string(begin, iter);
 		if(iter==end) return end;
 		begin=++iter;
 
 		// frame
-		iter=find(begin, end, c);
-		frame_ = string(begin, iter);
+		iter=std::find(begin, end, c);
+		frame_ = std::string(begin, iter);
 		if(iter==end) return end;
 
 		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
@@ -107,10 +107,10 @@ public:
 		return ++iter;
 	}
 
-	operator string() const
+	operator std::string() const
 	{
 		char delim = '\t';
-		stringstream sst;
+		std::stringstream sst;
 		sst << id_ << delim	<< "seqname"	<< delim << seqname_	<< "\n";
 		sst << id_ << delim << "source"		<< delim << source_		<< "\n";
 		sst << id_ << delim << "feature"	<< delim << feature_	<< "\n";
@@ -159,7 +159,7 @@ class gtf_attribute
 {
 private:
 
-	typedef tokenize::pair_token<string, tokenize::wrapped_token<'"'> > wrap_pair;
+	typedef tokenize::pair_token<std::string, tokenize::wrapped_token<'"'> > wrap_pair;
 
 	// Container
 	tokenize::token_list tk_list_;
@@ -181,7 +181,7 @@ public:
 		tk_list_.parse(begin, end);
 
 
-		list<string>::const_iterator iter;
+		std::list<std::string>::const_iterator iter;
 		for(iter=tk_list_.l_.begin(); iter != tk_list_.l_.end(); ++iter)
 		{
 			// "gene_id 'ENSG00000227232'"
@@ -195,8 +195,8 @@ public:
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Data retrieval
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
-	size_t map_size(const string &map) { return map_.map_size(map); }
-	operator string() const { return string(map_); }
+	size_t map_size(const std::string &map) { return map_.map_size(map); }
+	operator std::string() const { return std::string(map_); }
 	std::list<std::pair<size_t, std::string> > map_data() { return map_.map_data(); }
 
 	// Generic data retrieval mechanism
@@ -221,9 +221,9 @@ public:
 private:
 	size_t id_;
 	char delim_;
-	string line;
-	string::const_iterator begin;
-	string::const_iterator end;
+	std::string line;
+	std::string::const_iterator begin;
+	std::string::const_iterator end;
 
 	gff_element elem_;
 	typedef std::list<gff_element> lge;
@@ -236,7 +236,7 @@ public:
 	// Extract data from file.
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
-	void process_lines(ifstream &file, char com='#')
+	void process_lines(std::ifstream &file, char com='#')
 	{
 		while(getline(file, line))
 		{
@@ -253,7 +253,7 @@ public:
 	}
 
 	// Takes callback for printing out progression indicator ...
-	void process_lines(ifstream &file, size_t nlines, void (*callback)(size_t n), char com='#')
+	void process_lines(std::ifstream &file, size_t nlines, void (*callback)(size_t n), char com='#')
 	{
 		size_t i= 0;
 		while(getline(file, line))
@@ -278,7 +278,7 @@ public:
 	// Content retrieval
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
-	size_t map_size(const string &map) { return att_.map_size(map); }
+	size_t map_size(const std::string &map) { return att_.map_size(map); }
 	size_t size() const { return l_.size(); }
 
 	std::list<std::pair<size_t, std::string> > map_data() { return att_.map_data(); }
@@ -351,7 +351,7 @@ public:
 
 static void print_gtf_file(size_t s, const char* feature, const char *value, void* o)
 {
-	ostream *os = (ostream *) o;
+	std::ostream *os = (std::ostream *) o;
 	*os << s << "\t" << feature << "\t" << value << "\n";
 }
 

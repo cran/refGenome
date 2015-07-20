@@ -10,12 +10,11 @@
 
 #include <iostream>
 #include <sstream>
-#include <algorithm>	// transform, find_if_not
+#include <algorithm>		// transform, find_if_not
 #include <list>
 #include <cctype>		// isspace
 #include <utility>		// pair
 #include <unordered_map>
-using namespace std;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 // Forward declaration: used in class stoken_list
@@ -83,9 +82,9 @@ inline std::string trim(ssci begin, ssci end)
 }
 
 // Trim by moving of iterators
-void ref_trim(string::const_iterator &b, string::const_iterator &e)
+void ref_trim(std::string::const_iterator &b, std::string::const_iterator &e)
 {
-	b = find_if_not  (b, e, [](int c){return std::isspace(c);});
+	b = std::find_if_not  (b, e, [](int c){return std::isspace(c);});
 	e = r_find_if_not(b, e, [](int c){return std::isspace(c);});
 }
 
@@ -102,7 +101,7 @@ inline std::string unwrap(ssci begin, ssci end, char delim)
 	while((*end == delim) && (begin != end))
 		--end;
 
-	return string(begin, ++end);
+	return std::string(begin, ++end);
 }
 
 
@@ -117,7 +116,7 @@ inline std::string unwrap(ssci begin, ssci end, char delim)
 // Functional solution which fills a list
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
-void tokenize(ssci begin, ssci end, list<string> &l, const char c)
+void tokenize(ssci begin, ssci end, std::list<std::string> &l, const char c)
 {
 	l.clear();
 	if(begin == end)
@@ -126,7 +125,7 @@ void tokenize(ssci begin, ssci end, list<string> &l, const char c)
 	while(lhs != end)
 	{
 		rhs = find(lhs, end, c);
-		l.push_back(string(lhs, rhs));
+		l.push_back(std::string(lhs, rhs));
 		if(rhs!=end)
 			++rhs;
 		lhs = rhs;
@@ -137,7 +136,7 @@ void tokenize(ssci begin, ssci end, list<string> &l, const char c)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 // Extracts tokens and trims strings before inserting into list
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
-void trim_token(ssci begin, ssci end, list<string> &l, const char c)
+void trim_token(ssci begin, ssci end, std::list<std::string> &l, const char c)
 {
 	l.clear();
 	if(begin == end)
@@ -215,19 +214,19 @@ public:
 	basic_token(char delim=':'): delim_(delim) {}
 	virtual ~basic_token() {}
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
-	string getDelim() const { return string(1, delim_); }
+	std::string getDelim() const { return std::string(1, delim_); }
 	void setDelim(char delim) { delim_ = delim; }
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
-	friend ostream& operator << (ostream&os, const basic_token &t);
+	friend std::ostream& operator << (std::ostream&os, const basic_token &t);
 
 protected:
 	char delim_;
-	virtual operator string() const = 0;
+	virtual operator std::string() const = 0;
 };
 
 // Provides insertion operator for all derived classes
-ostream& operator << (ostream &os, const basic_token &bt)
-	{ return os << string(bt); }
+std::ostream& operator << (std::ostream &os, const basic_token &bt)
+	{ return os << std::string(bt); }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 //
@@ -240,13 +239,13 @@ public:
 	virtual ~string_token() noexcept {}
 
 	virtual void parse(ssci begin, ssci end)
-			{ s_ = string(begin, end); }
+			{ s_ = std::string(begin, end); }
 
 protected:
-	virtual operator string() const { return s_; }
+	virtual operator std::string() const { return s_; }
 
 private:
-	string s_;
+	std::string s_;
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
@@ -272,16 +271,16 @@ public:
 		while((*end == delim) && (begin != end))
 			--end;
 
-		s_ = string(begin, ++end);
+		s_ = std::string(begin, ++end);
 	}
 	virtual ~wrapped_token() noexcept {}
 
 private:
-	string s_;
+	std::string s_;
 
 public:
 	void clear() { s_.clear(); }
-	operator string() const { return s_; }
+	operator std::string() const { return s_; }
 };
 
 
@@ -304,7 +303,7 @@ private:
 	T2 second_;
 
 protected:
-	virtual operator string() const { return string(first_) + string(1, delim_) + string(second_); }
+	virtual operator std::string() const { return std::string(first_) + std::string(1, delim_) + std::string(second_); }
 
 
 public:
@@ -368,8 +367,8 @@ public:
 	T1 first() const { return first_; }
 	T2 second() const { return second_; }
 
-	std::string string1() { return string(first_); }
-	std::string string2() { return string(second_); }
+	std::string string1() { return std::string(first_); }
+	std::string string2() { return std::string(second_); }
 };
 
 
@@ -385,8 +384,8 @@ public:
 	virtual ~value_token() {}
 
 private:
-	string type_;
-	string value_;
+	std::string type_;
+	std::string value_;
 
 public:
 	void parse(ssci begin, ssci end)
@@ -402,18 +401,18 @@ public:
 		ssci i = find(begin, end, delim_);
 		if(i != end)
 		{
-			type_ = string(begin, i);
-			value_ = string(++i, end);
+			type_ = std::string(begin, i);
+			value_ = std::string(++i, end);
 		}
 		else
 		{
-			type_ = string(begin, end);
-			value_ = string("");
+			type_ = std::string(begin, end);
+			value_ = std::string("");
 		}
 	}
 
 protected:
-	virtual operator string() const { return type_ + string(1, delim_) + value_; }
+	virtual operator std::string() const { return type_ + std::string(1, delim_) + value_; }
 };
 
 
@@ -441,11 +440,11 @@ public:
 	virtual ~token_list() noexcept {}
 
 private:
-	std::list<string> l_;
+	std::list<std::string> l_;
 	friend class gtf::gtf_attribute;
 
 protected:
-	operator string() const;
+	operator std::string() const;
 
 public:
 	void clear() { l_.clear(); }
@@ -458,12 +457,12 @@ public:
 };
 
 
-token_list::operator string() const
+token_list::operator std::string() const
 {
-	stringstream sst;
+	std::stringstream sst;
 	if(l_.size())
 	{
-		std::list<string>::const_iterator iter = l_.begin();
+		std::list<std::string>::const_iterator iter = l_.begin();
 		sst << *iter;
 		++iter;
 		for(; iter!=l_.end(); ++iter)
@@ -534,13 +533,13 @@ private:
 	}
 
 protected:
-	virtual operator string() const;
+	virtual operator std::string() const;
 };
 
 template<typename T, unsigned char delim>
-token<T, delim>::operator string() const
+token<T, delim>::operator std::string() const
 {
-	stringstream sst;
+	std::stringstream sst;
 	if(l_.size())
 	{
 		typename std::list<T*>::const_iterator iter = l_.begin();
@@ -573,7 +572,7 @@ private:
 	friend class token_map;
 
 public:
-	void add(size_t id, const string & val)
+	void add(size_t id, const std::string & val)
 	{
 		ip i(id, val);
 		l_.push_back(i);
@@ -594,25 +593,25 @@ public:
 	token_map() {}
 	virtual ~token_map() noexcept {}
 
-	typedef std::unordered_map<string, id_token> umit;
+	typedef std::unordered_map<std::string, id_token> umit;
 	typedef umit::const_iterator imit;
 
 private:
 	umit m_;
-	friend ostream& operator << (ostream&os, const token_map &t);
+	friend std::ostream& operator << (std::ostream&os, const token_map &t);
 
 public:
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Insertion of data elements
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
-	void add(const string& key, size_t id, const string &val)
+	void add(const std::string& key, size_t id, const std::string &val)
 		{ m_[key.c_str()].add(id, val); }
 
-	void add(const char *key, size_t id, const string &val)
+	void add(const char *key, size_t id, const std::string &val)
 		{ m_[key].add(id, val);	}
 
 	void add(const char *key, size_t id, const char* val)
-		{ m_[key].add(id, string(val)); }
+		{ m_[key].add(id, std::string(val)); }
 
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
@@ -620,7 +619,7 @@ public:
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	size_t size() const { return m_.size(); }
 
-	size_t map_size(const string &s) { return m_[s.c_str()].size(); }
+	size_t map_size(const std::string &s) { return m_[s.c_str()].size(); }
 
 	std::list<std::pair<size_t, std::string> > map_data()
 	{
@@ -639,7 +638,7 @@ public:
 
 	void process_data(void (*func)(size_t s, const char* feature, const char *value, void* o), void *o) const
 	{
-		std::unordered_map<string, id_token>::const_iterator umit;
+		std::unordered_map<std::string, id_token>::const_iterator umit;
 		std::list<std::pair<size_t, std::string> >::const_iterator lpit;
 		for(umit = m_.begin(); umit != m_.end(); ++umit)
 		{
@@ -660,11 +659,11 @@ public:
 
 
 	// An example showing how to extract content from object.
-	operator string() const
+	operator std::string() const
 	{
 		char delim='\t';
-		stringstream sst;
-		std::unordered_map<string, id_token>::const_iterator umit;
+		std::stringstream sst;
+		std::unordered_map<std::string, id_token>::const_iterator umit;
 		std::list<std::pair<size_t, std::string> >::const_iterator lpit;
 
 		for(umit = m_.begin(); umit != m_.end(); ++umit)
@@ -679,9 +678,9 @@ public:
 };
 
 
-ostream & operator << (ostream &os, const token_map &t)
+std::ostream & operator << (std::ostream &os, const token_map &t)
 {
-	std::unordered_map<string, id_token>::const_iterator iter;
+	std::unordered_map<std::string, id_token>::const_iterator iter;
 
 	for(iter = t.m_.begin(); iter != t.m_.end(); ++iter)
 	{

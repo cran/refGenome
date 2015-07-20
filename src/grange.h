@@ -10,7 +10,6 @@
 
 #include "data_frame.h"
 #include <list>
-using namespace std;
 
 struct grange
 {
@@ -58,7 +57,7 @@ public:
 		int *ubs = dfr.addIntColumn("ubs");
 
 		int i;
-		list<grange>::const_iterator iter;
+		std::list<grange>::const_iterator iter;
 
 		for(i = 0, iter = l.begin(); iter != l.end(); ++i, ++iter)
 		{
@@ -74,7 +73,7 @@ public:
 
 private:
 	unsigned last_id;
-	list<grange> l;
+	std::list<grange> l;
 };
 
 

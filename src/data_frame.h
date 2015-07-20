@@ -12,24 +12,6 @@
 #include <math.h>
 #include <cstdlib>		// calloc free
 
-/*
-class str_sxp
-{
-public:
-	str_sxp(size_t n){ PROTECT(p_=allocVector(STRSXP, n)); }
-	~str_sxp() { UNPROTECT(1); }
-
-	operator SEXP() const { return p_; }
-	void fill(const char *c ="")
-	{
-		for(size_t i = 0; i < (size_t) length(p_); ++i)
-			SET_STRING_ELT(p_, i, mkChar(c));
-	}
-
-	SEXP p_;
-};
-*/
-
 class data_frame
 {
 public:

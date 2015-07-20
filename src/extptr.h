@@ -1,5 +1,5 @@
 /*
- * exptr.hpp
+ * exptr.h
  *
  *  Created on: 30.01.2015
  *      Author: kaisers
@@ -11,15 +11,16 @@
 #include<Rdefines.h>
 #include<Rinternals.h>
 #include<memory>
+#include<vector>
+#include<string>
 
-using namespace std;
 
 template<typename T>
 static void _finalizer(SEXP ext)
 {
 	if(TYPEOF(ext)==EXTPTRSXP)
 	{
-		shared_ptr<T> *p = (shared_ptr<T>*) R_ExternalPtrAddr(ext);
+		std::shared_ptr<T> *p = (std::shared_ptr<T>*) R_ExternalPtrAddr(ext);
 		delete p;
 	}
 }
@@ -34,12 +35,12 @@ public:
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Constructors
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
-	explicit extptr(): sp_(new shared_ptr<T>(make_shared<T>())){
+	explicit extptr(): sp_(new std::shared_ptr<T>(std::make_shared<T>())){
 		//Rprintf("[extptr] extptr() id: %3i\n", (*sp_)->getValue());
 	}
 	// Copies incoming object
-	extptr(T &p): sp_(new shared_ptr<T>(make_shared<T>())) { **sp_ = p;	}
-	//extptr(shared_ptr<T> &p): sp_(new shared_ptr<T>(make_shared<T>())) { *sp_= p; }
+	extptr(T &p): sp_(new std::shared_ptr<T>(std::make_shared<T>())) { **sp_ = p;	}
+
 
 	explicit extptr(SEXP pPtr)//: sp_(new shared_ptr<T>(make_shared<T>())) // ToDo: Throw exception ??
 	{
@@ -49,8 +50,8 @@ public:
 		if(!R_ExternalPtrAddr(pPtr))
 			error("[extptr] Received Nil pointer!");
 
-		shared_ptr<T> * sp = (shared_ptr<T> *) (R_ExternalPtrAddr(pPtr));
-		sp_ = new shared_ptr<T>(*sp);
+		std::shared_ptr<T> * sp = (std::shared_ptr<T> *) (R_ExternalPtrAddr(pPtr));
+		sp_ = new std::shared_ptr<T>(*sp);
 
 	}
 
@@ -75,7 +76,7 @@ public:
 
 	operator SEXP() const
 	{
-		shared_ptr<T> * p = new shared_ptr<T>;
+		std::shared_ptr<T> * p = new std::shared_ptr<T>;
 		// Shared copy
 		*p = *sp_;
 		//Rprintf("[extptr] operator SEXP: %p\n", p);
@@ -87,7 +88,7 @@ public:
 	}
 
 private:
-	shared_ptr<T> * sp_;
+	std::shared_ptr<T> * sp_;
 };
 
 
@@ -96,7 +97,7 @@ template<typename T>
 SEXP to_string(const extptr<T> &p)
 {
 	SEXP pRes  = PROTECT(allocVector(STRSXP, 1));
-	SET_STRING_ELT(pRes, 0, mkChar(string(*p).c_str()));
+	SET_STRING_ELT(pRes, 0, mkChar(std::string(*p).c_str()));
 	UNPROTECT(1);
 	return pRes;
 }
@@ -202,7 +203,7 @@ public:
 		pRob=p;
 	}
 
-	explicit atmptr(const vector<string> &v): protected_(true)
+	explicit atmptr(const std::vector<std::string> &v): protected_(true)
 	{
 		int i, n = (int) v.size();
 		pRob = PROTECT(allocVector(STRSXP, n));
@@ -216,14 +217,14 @@ public:
 			UNPROTECT(1);
 	}
 
-	void get(unsigned i, string &s)
+	void get(unsigned i, std::string &s)
 	{
 		s.clear();
 		if(i < (unsigned) LENGTH(pRob))
 			s = CHAR(STRING_ELT(pRob, i));
 	}
 
-	void set(unsigned i, const string &s)
+	void set(unsigned i, const std::string &s)
 	{
 		if(i < (unsigned) LENGTH(pRob))
 			SET_STRING_ELT(pRob, i, mkChar(s.c_str()));
@@ -274,7 +275,7 @@ void set_atm_c(unsigned i, const char* c, void *o)
 	p->set(i, c);
 }
 
-void set_atm_c(unsigned i, const string& c, void *o)
+void set_atm_c(unsigned i, const std::string& c, void *o)
 {
 	atmptr<char> *p = (atmptr<char> *) o;
 	p->set(i, c);
@@ -282,7 +283,7 @@ void set_atm_c(unsigned i, const string& c, void *o)
 }
 
 
-SEXP to_string(const string & s)
+SEXP to_string(const std::string & s)
 {
 	SEXP pRes = PROTECT(allocVector(STRSXP, 1));
 	SET_STRING_ELT(pRes, 0, mkChar(s.c_str()));
