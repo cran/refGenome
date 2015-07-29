@@ -2,7 +2,7 @@ Package: refGenome
 Type: Package
 Title: Gene and Splice Site Annotation Using Annotation Data from
         Ensembl and UCSC Genome Browsers
-Version: 1.5.6
+Version: 1.5.8
 Date: 2013-05-08
 Author: Wolfgang Kaisers
 Maintainer: Wolfgang Kaisers <kaisers@med.uni-duesseldorf.de>
@@ -10,7 +10,7 @@ Description: Contains functionality for import and managing of downloaded genome
 License: GPL-2
 Depends: methods,doBy,RSQLite
 Imports: DBI
-Packaged: 2015-07-20 09:49:05 UTC; wolfgang
+Packaged: 2015-07-28 20:14:22 UTC; wolfgang
 NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2015-07-20 12:44:24
+Date/Publication: 2015-07-29 00:16:21

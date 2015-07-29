@@ -12,7 +12,8 @@ require(refGenome)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
 ensfile <- system.file("extdata",
-            "hs.ensembl.62.small.RData", package = "refGenome", mustWork=TRUE)
+                       "hs.ensembl.62.small.RData",
+                       package = "refGenome", mustWork=TRUE)
 
 # A) Load Ensembl genome
 ens <- loadGenome(ensfile)

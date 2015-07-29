@@ -1,5 +1,5 @@
 ca303894d762795291f9bc88786a4e46 *ChangeLog
-daab7715016edc2cdaa7453c83eed73c *DESCRIPTION
+39943217c06bb0e4c627e81cc7807136 *DESCRIPTION
 0c82b29198a53addfe993adfa99734a8 *NAMESPACE
 ed56ec56d9244ad6d0e2214eb96c8d3e *NEWS
 5156421271a48667aafb4f6a4f827d20 *R/refGenome.r
@@ -32,14 +32,14 @@ d1e14305bb00ad316b92ce405e027cec *man/unifyRanges.Rd
 81737543c591e43d48d79419e6761181 *man/writeDB.Rd
 83d2b1d956085bc378769687e0c2725c *src/Makevars
 83d2b1d956085bc378769687e0c2725c *src/Makevars.win
-6b18a7e7cda0d9f5337d6a81243e280e *src/data_frame.h
+53c23833e33db39a9eec0f2a0eafdcad *src/data_frame.h
 dbd2571a76fd324cff266e46e02d377a *src/extptr.h
 091ef98102ebb28549d4ece01f473d7c *src/grange.h
 28536b480aebdca42b96f16708850f10 *src/gtf.h
-17a1adaced23fab2a520e844aae35757 *src/refGenome.cpp
+e4a9332545deeadf8b1ca262a49090cc *src/refGenome.cpp
 23b74a2363d531e4edb582eb85581503 *src/refGenome.h
 c78104b1bd888edbb2bb22d70b8750f8 *src/tokenize.h
-f9dd7baf4e4ac9f28e0e0357396fcfb5 *tests/test-all.R
+f9e59735b1f2b3127ca70ac5df40ab1c *tests/test-all.R
 05bf58d34d6a1e19d49c984fba6e8673 *tests/test_overlap_juncs.r
 bd1413a19c26237b941b0dde46fc2e8b *tests/test_read_gtf.r
 0b33e124085218a783d877ff90d1de42 *tests/test_unify_ranges.r

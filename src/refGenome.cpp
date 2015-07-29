@@ -1618,7 +1618,7 @@ SEXP gap_overlap(SEXP pQid, SEXP pQlstart, SEXP pQlend, SEXP pQrstart, SEXP pQre
 
 		// 3.2 Do traverse + identify best hit (= lowest sod)
 		//Rprintf("[gap_overlap] i=%2i j=%2i qid=%2i Hits: ", i,j, res_qid[i]);
-		while((qRend[i] >= rLstart[j]) && j < nr)
+		while( (qRend[i] >= rLstart[j]) )
 		{
 			// Actual overlap ?
 			if(qLstart[i] < rRend[j] && qRend[i] > rLstart[j])
@@ -1645,6 +1645,8 @@ SEXP gap_overlap(SEXP pQid, SEXP pQlstart, SEXP pQlend, SEXP pQrstart, SEXP pQre
 				}
 			}
 			++j;
+			if(j == nr)
+				break;
 		}
 		//Rprintf("\n");
 
