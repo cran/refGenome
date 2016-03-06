@@ -160,121 +160,132 @@ SEXP get_splice_juncs(SEXP pTranscript,SEXP pId, SEXP pStart, SEXP pEnd)
 	return dflist;
 }
 
-SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pRend, SEXP pId, SEXP pGeneId, SEXP pStrand)
+SEXP unify_splice_juncs(SEXP pSeqid, SEXP pLstart, SEXP pLend, SEXP pRstart, SEXP pRend, SEXP pId, SEXP pGeneId, SEXP pStrand, SEXP pNnmd)
 {
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Calculates unique junction coordinate values (uJunc)
 	// from a sorted junction list
 	//
 	// Expects that pSeqid, pLend and pRstart are ordered
-	// so that identical junctions are
-	// represented by consecutive equal values
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// so that identical junctions appear as
+	// consecutive equal values
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	// Check incoming
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	if(TYPEOF(pSeqid)!=INTSXP)
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	// Check incoming arguments
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	if(TYPEOF(pSeqid) != INTSXP)
 		error("[unify_splice_juncs] pSeqid must be INT!");
-	if(TYPEOF(pLstart)!=INTSXP)
+	if(TYPEOF(pLstart) != INTSXP)
 		error("[unify_splice_juncs] pLstart must be INT!");
-	if(TYPEOF(pLend)!=INTSXP)
+	if(TYPEOF(pLend) != INTSXP)
 		error("[unify_splice_juncs] pLend must be INT!");
-	if(TYPEOF(pRstart)!=INTSXP)
+	if(TYPEOF(pRstart) != INTSXP)
 		error("[unify_splice_juncs] pRstart must be INT!");
-	if(TYPEOF(pRend)!=INTSXP)
+	if(TYPEOF(pRend) != INTSXP)
 		error("[unify_splice_juncs] pRend must be INT!");
-	if(TYPEOF(pId)!=INTSXP)
+	if(TYPEOF(pId) != INTSXP)
 		error("[unify_splice_juncs] pId must be INT!");
-	if(TYPEOF(pGeneId)!=INTSXP)
+	if(TYPEOF(pGeneId) != INTSXP)
 		error("[unify_splice_juncs] pGeneId must be INT!");
-	if(TYPEOF(pStrand)!=INTSXP)
+	if(TYPEOF(pStrand) != INTSXP)
 		error("[unify_splice_juncs] pStrand must be INT!");
+	if(TYPEOF(pNnmd) != INTSXP)
+		error("[unify_splice_juncs] pNnmd must be INT!");
 
-	unsigned i,j,k, nJunc, n=LENGTH(pId), nSites;
+
+	unsigned i,j,k, nJunc, n = LENGTH(pId), nSites;
 
 	int 	*seqid=INTEGER(pSeqid),
 			*lstart=INTEGER(pLstart), *lend=INTEGER(pLend),
 			*rstart=INTEGER(pRstart), *rend=INTEGER(pRend),
 			*id=INTEGER(pId),
 			*gid=INTEGER(pGeneId),    *strand=INTEGER(pStrand);
+	int		*nnmd = INTEGER(pNnmd);
 
 	int usq,ule,urs; // unified splice coordinates
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// First row identifies first nJunc site
-	usq=seqid[0];
-	ule=lend[0];
-	urs=rstart[0];
-	nJunc=1;
-	i=0;
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	usq = seqid[0];
+	ule = lend[0];
+	urs = rstart[0];
+	nJunc = 1;
+	i = 0;
 	//Rprintf("[unify_splice_juncs] Start junc %i at i= %i.\n",nJunc,i);
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Check all subsequent rows for position equality
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	for(i=1; i<n; ++i)
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	for(i = 1; i < n; ++i)
 	{
-		if((seqid[i]!=usq) | (lend[i]!=ule) | (rstart[i]!=urs))
+		if((seqid[i] != usq) | (lend[i] != ule) | (rstart[i] != urs))
 		{
 			++nJunc;
 			//Rprintf("[unify_splice_juncs] Start junc %i at i= %i.\n",nJunc,i);
-			usq=seqid[i];
-			ule=lend[i];
-			urs=rstart[i];
+			usq = seqid[i];
+			ule = lend[i];
+			urs = rstart[i];
 		}
 	}
 	//Rprintf("[unify_splice_juncs] Found %i juncs.\n",nJunc);
 
-	if(nJunc==0)
+	if(nJunc == 0)
 		return R_NilValue;
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Create output vectors
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	SEXP puId;
-	PROTECT(puId=allocVector(INTSXP,nJunc));
+	PROTECT(puId = allocVector(INTSXP, nJunc));
 
 	SEXP puSeq;
-	PROTECT(puSeq=allocVector(INTSXP,nJunc));
+	PROTECT(puSeq = allocVector(INTSXP, nJunc));
 
 	SEXP puLstart;
-	PROTECT(puLstart=allocVector(INTSXP,nJunc));
+	PROTECT(puLstart = allocVector(INTSXP, nJunc));
 
 	SEXP puLend;
-	PROTECT(puLend=allocVector(INTSXP,nJunc));
+	PROTECT(puLend = allocVector(INTSXP, nJunc));
 
 	SEXP puRstart;
-	PROTECT(puRstart=allocVector(INTSXP,nJunc));
+	PROTECT(puRstart = allocVector(INTSXP, nJunc));
 
 	SEXP puRend;
-	PROTECT(puRend=allocVector(INTSXP,nJunc));
+	PROTECT(puRend = allocVector(INTSXP, nJunc));
 
 	SEXP puNsites; // Number of junction sites per uJunc
-	PROTECT(puNsites=allocVector(INTSXP,nJunc));
+	PROTECT(puNsites = allocVector(INTSXP, nJunc));
 
 	SEXP puGene; // Gene-id associated with exon table
-	PROTECT(puGene=allocVector(INTSXP,nJunc));
+	PROTECT(puGene = allocVector(INTSXP, nJunc));
 
 	SEXP puStrand;
-	PROTECT(puStrand=allocVector(INTSXP,nJunc));
+	PROTECT(puStrand = allocVector(INTSXP, nJunc));
 
 	SEXP pFexid; // First exon id (points into exon table)
-	PROTECT(pFexid=allocVector(INTSXP,nJunc));
+	PROTECT(pFexid = allocVector(INTSXP, nJunc));
+
+	// Number of transcripts which are not of transcript biotype "nonsense_mediated_decay"
+	// -> Count not NMD = cnnmd
+	SEXP pCnNmd;
+	PROTECT(pCnNmd = allocVector(INTSXP, nJunc));
 
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Calculate values for sites
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	int     *uid=INTEGER(puId),         *useq=INTEGER(puSeq),
-			*ulstart=INTEGER(puLstart), *ulend=INTEGER(puLend),
-			*urstart=INTEGER(puRstart), *urend=INTEGER(puRend),
-			*uNsites=INTEGER(puNsites), *uId=INTEGER(pFexid),
-			*uGene=INTEGER(puGene),     *uStrand=INTEGER(puStrand);
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	int     *uid = INTEGER(puId),         *useq = INTEGER(puSeq),
+			*ulstart = INTEGER(puLstart), *ulend = INTEGER(puLend),
+			*urstart = INTEGER(puRstart), *urend = INTEGER(puRend),
+			*uNsites = INTEGER(puNsites), *uId = INTEGER(pFexid),
+			*uGene = INTEGER(puGene),     *uStrand = INTEGER(puStrand);
+	int * cnnmd = INTEGER(pCnNmd);
 
 	int min_lstart,max_rend;
-	const unsigned nGenes=10;
+	const unsigned nGenes = 10;
 	unsigned geneId[nGenes];  // geneId
 	unsigned geneCt[nGenes];  // gene-count
 	unsigned geneStr[nGenes]; // gene-strand
@@ -285,201 +296,216 @@ SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pR
 	j=0; // write index of actual uJunc
 	i=0; // read  index of actual junc
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Start reading in row 0
 	// Row 0 identifies first uJunc
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	uid[j]=j+1;
-	useq[j]=seqid[i];
-	ulend[j]=lend[i];
-	urstart[j]=rstart[i];
-	uId[j]=id[i];
-	min_lstart=lstart[i];
-	max_rend=rend[i];
-	nSites=1;
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	uid[j] = j + 1;
+	useq[j] = seqid[i];
+	ulend[j] = lend[i];
+	urstart[j] = rstart[i];
+	uId[j] = id[i];
+	min_lstart = lstart[i];
+	max_rend = rend[i];
+	nSites = 1;
+	cnnmd[j] = nnmd[i];
 	//Rprintf("[unify_splice_juncs] Start junc %i at i= %i.\n",j,i);
 
-	geneId[0]=gid[i];
-	geneStr[0]=strand[i];
-	geneCt[0]=1;
-	for(k=1;k<nGenes;++k)
-		geneId[k]=0;
+	geneId[0] = gid[i];
+	geneStr[0] = strand[i];
+	geneCt[0] = 1;
+	for(k = 1; k < nGenes; ++k)
+		geneId[k] = 0;
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Check all subsequent rows for position equality
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	for(i=1;i<n;++i)
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	for(i = 1; i < n; ++i)
 	{
-		if((seqid[i]!=useq[j]) | (lend[i]!=ulend[j]) | (rstart[i]!=urstart[j]))
+		if( (seqid[i] != useq[j]) | (lend[i] != ulend[j]) | (rstart[i] != urstart[j]) )
 		{
 			// Row i contains new uJunc-site
 
-			// + + + + + + + + + + + + + + + + + + + + + +
+			// - - - - - - - - - - - - - - - - - - - - - //
 			// Complete values for last uJunc-site
-			uNsites[j]=nSites;
-			ulstart[j]=min_lstart;
-			urend[j]=max_rend;
+			// - - - - - - - - - - - - - - - - - - - - - //
+			uNsites[j] = nSites;
+			ulstart[j] = min_lstart;
+			urend[j] = max_rend;
 
+			// - - - - - - - - - - - - - - - - - - - - - //
 			// Get some gene-id with "maximal" gene-id count
-			mxGct=0;
-			mxGid=0;
-			mxStr=0;
-			for(k=0;k<nGenes;++k)
+			// - - - - - - - - - - - - - - - - - - - - - //
+			mxGct = 0;
+			mxGid = 0;
+			mxStr = 0;
+			for(k = 0; k < nGenes; ++k)
 			{
-				if(geneId[k]==0)
+				if(geneId[k] == 0)
 					break;
 
-				if(mxGct<geneCt[k])
+				if(mxGct < geneCt[k])
 				{
-					mxGct=geneCt[k];
-					mxGid=geneId[k];
-					mxStr=geneStr[k];
+					mxGct = geneCt[k];
+					mxGid = geneId[k];
+					mxStr = geneStr[k];
 				}
 			}
-			uGene[j]=mxGid;
-			uStrand[j]=mxStr;
+			uGene[j] = mxGid;
+			uStrand[j] = mxStr;
 
 			//Rprintf("[unify_splice_juncs] Start junc %i at i= %i.\n",j,i);
 
-			// + + + + + + + + + + + + + + + + + + + + + +
+			// - - - - - - - - - - - - - - - - - - - - - //
 			// Set values for next uJunc-site
+			// - - - - - - - - - - - - - - - - - - - - - //
 			++j;
-			if(j>=nJunc)
+			if(j >= nJunc)
 				error("[unify_splice_juncs] Write index exceeding nJunc limit!");
 
-			uid[j]=j+1;
-			useq[j]=seqid[i];
-			ulend[j]=lend[i];
-			urstart[j]=rstart[i];
-			uId[j]=id[i];
-			min_lstart=lstart[i];
-			max_rend=rend[i];
-			nSites=1;
+			uid[j] = j + 1;
+			useq[j] = seqid[i];
+			ulend[j] = lend[i];
+			urstart[j] = rstart[i];
+			uId[j] = id[i];
+			min_lstart = lstart[i];
+			max_rend = rend[i];
+			nSites = 1;
+			cnnmd[j] = nnmd[i];
 
-			geneId[0]=gid[i];
-			geneStr[0]=strand[i];
-			geneCt[0]=1;
+			geneId[0] = gid[i];
+			geneStr[0] = strand[i];
+			geneCt[0] = 1;
 
-			for(k=1;k<nGenes;++k)
+			for(k = 1; k < nGenes; ++k)
 			{
-				geneId[k]=0;
-				geneCt[k]=0;
+				geneId[k] = 0;
+				geneCt[k] = 0;
 			}
 
 		}
 		else
 		{
-			// + + + + + + + + + + + + + + + + + + + + + +
+			// - - - - - - - - - - - - - - - - - - - - - //
 			// Row i is part of actual uJunc-site
+			// - - - - - - - - - - - - - - - - - - - - - //
 			++nSites;
 
 			// lstart and rend
-			if(lstart[i]<min_lstart)
-				min_lstart=lstart[i];
-			if(rend[i]>max_rend)
-				max_rend=rend[i];
+			if(lstart[i] < min_lstart)
+				min_lstart = lstart[i];
+
+			if(rend[i] > max_rend)
+				max_rend = rend[i];
 
 			// Count geneId's
-			for(k=0;k<nGenes;++k)
+			for(k = 0; k < nGenes; ++k)
 			{
 				if((unsigned) gid[i] == geneId[k])
 				{
 					++(geneCt[k]);
 					break;
 				}
-				if(geneId[k]==0)
+				if(geneId[k] == 0)
 				{
-					geneId[k]=gid[i];
-					geneStr[k]=strand[i];
-					geneCt[k]=1;
+					geneId[k] = gid[i];
+					geneStr[k] = strand[i];
+					geneCt[k] = 1;
 					break;
 				}
 			}
+
+			// - - - - - - - - - - - - - - - - - - - - - //
+			// Is row i part of non-NMD transcript?
+			// - - - - - - - - - - - - - - - - - - - - - //
+			cnnmd[j] += nnmd[i];
 		}
 	}
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Complete values for last uJunc-site
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	uNsites[j]=nSites;
-	ulstart[j]=min_lstart;
-	urend[j]=max_rend;
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	uNsites[j] = nSites;
+	ulstart[j] = min_lstart;
+	urend[j] = max_rend;
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Get some gene-id with "maximal" gene-id count
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	mxGct=0;
-	mxGid=0;
-	mxStr=0;
-	for(k=0;k<nGenes;++k)
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	mxGct = 0;
+	mxGid = 0;
+	mxStr = 0;
+	for(k = 0; k < nGenes; ++k)
 	{
 		if(geneId[k]==0)
 			break;
 
-		if(mxGct<geneCt[k])
+		if(mxGct < geneCt[k])
 		{
-			mxGct=geneCt[k];
-			mxGid=geneId[k];
-			mxStr=geneStr[k];
+			mxGct = geneCt[k];
+			mxGid = geneId[k];
+			mxStr = geneStr[k];
 		}
 	}
-	uGene[j]=mxGid;
-	uStrand[j]=mxStr;
+	uGene[j] = mxGid;
+	uStrand[j] = mxStr;
 
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Assemble output
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	SEXP dflist;
-	PROTECT(dflist=allocVector(VECSXP,10));
+	PROTECT(dflist = allocVector(VECSXP,11));
 
-	SET_VECTOR_ELT(dflist,0,puId);
-	SET_VECTOR_ELT(dflist,1,puSeq);
-	SET_VECTOR_ELT(dflist,2,puLstart);
-	SET_VECTOR_ELT(dflist,3,puLend);
-	SET_VECTOR_ELT(dflist,4,puRstart);
-	SET_VECTOR_ELT(dflist,5,puRend);
-	SET_VECTOR_ELT(dflist,6,puNsites);
-	SET_VECTOR_ELT(dflist,7,puGene);
-	SET_VECTOR_ELT(dflist,8,puStrand);
-	SET_VECTOR_ELT(dflist,9,pFexid);
+	SET_VECTOR_ELT(dflist, 0, puId);
+	SET_VECTOR_ELT(dflist, 1, puSeq);
+	SET_VECTOR_ELT(dflist, 2, puLstart);
+	SET_VECTOR_ELT(dflist, 3, puLend);
+	SET_VECTOR_ELT(dflist, 4, puRstart);
+	SET_VECTOR_ELT(dflist, 5, puRend);
+	SET_VECTOR_ELT(dflist, 6, puNsites);
+	SET_VECTOR_ELT(dflist, 7, puGene);
+	SET_VECTOR_ELT(dflist, 8, puStrand);
+	SET_VECTOR_ELT(dflist, 9, pFexid);
+	SET_VECTOR_ELT(dflist, 10, pCnNmd);
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Column Names
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	SEXP col_names;
-	PROTECT(col_names=allocVector(STRSXP,10));
-	SET_STRING_ELT(col_names,0,mkChar("id"));
-	SET_STRING_ELT(col_names,1,mkChar("seqid"));
-	SET_STRING_ELT(col_names,2,mkChar("lstart"));
-	SET_STRING_ELT(col_names,3,mkChar("lend"));
-	SET_STRING_ELT(col_names,4,mkChar("rstart"));
-	SET_STRING_ELT(col_names,5,mkChar("rend"));
-	SET_STRING_ELT(col_names,6,mkChar("nSites"));
-	SET_STRING_ELT(col_names,7,mkChar("gene_id"));
-	SET_STRING_ELT(col_names,8,mkChar("strand"));
-	SET_STRING_ELT(col_names,9,mkChar("fexid"));
-	setAttrib(dflist,R_NamesSymbol,col_names);
+	PROTECT(col_names=allocVector(STRSXP,11));
+	SET_STRING_ELT(col_names, 0, mkChar("id"));
+	SET_STRING_ELT(col_names, 1, mkChar("seqid"));
+	SET_STRING_ELT(col_names, 2, mkChar("lstart"));
+	SET_STRING_ELT(col_names, 3, mkChar("lend"));
+	SET_STRING_ELT(col_names, 4, mkChar("rstart"));
+	SET_STRING_ELT(col_names, 5, mkChar("rend"));
+	SET_STRING_ELT(col_names, 6, mkChar("nSites"));
+	SET_STRING_ELT(col_names, 7, mkChar("gene_id"));
+	SET_STRING_ELT(col_names, 8, mkChar("strand"));
+	SET_STRING_ELT(col_names, 9, mkChar("fexid"));
+	SET_STRING_ELT(col_names, 10, mkChar("cnnmd"));
+	setAttrib(dflist, R_NamesSymbol, col_names);
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	// Row Names
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 	SEXP row_names;
-    PROTECT(row_names=allocVector(STRSXP,nJunc));
+    PROTECT(row_names = allocVector(STRSXP, nJunc));
 
 	char *buf=(char*) calloc(buf_size,sizeof(char));
-    for(i=0;i<nJunc;++i)
+    for(i = 0; i < nJunc; ++i)
     {
-    	sprintf(buf,"%i",i+1);
-    	SET_STRING_ELT(row_names,i,mkChar(buf));
+    	sprintf(buf,"%i", i + 1);
+    	SET_STRING_ELT(row_names, i, mkChar(buf));
     }
     free(buf);
-    setAttrib(dflist,R_RowNamesSymbol,row_names);
+    setAttrib(dflist,R_RowNamesSymbol, row_names);
 
-	// + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + //
-	setAttrib(dflist,R_ClassSymbol,mkString("data.frame"));
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+	setAttrib(dflist, R_ClassSymbol, mkString("data.frame"));
 
-	UNPROTECT(13);
+	UNPROTECT(14);
 	return dflist;
 }
 
@@ -1618,7 +1644,7 @@ SEXP gap_overlap(SEXP pQid, SEXP pQlstart, SEXP pQlend, SEXP pQrstart, SEXP pQre
 
 		// 3.2 Do traverse + identify best hit (= lowest sod)
 		//Rprintf("[gap_overlap] i=%2i j=%2i qid=%2i Hits: ", i,j, res_qid[i]);
-		while( (qRend[i] >= rLstart[j]) )
+		while((qRend[i] >= rLstart[j]) && j < nr)
 		{
 			// Actual overlap ?
 			if(qLstart[i] < rRend[j] && qRend[i] > rLstart[j])
@@ -1645,8 +1671,6 @@ SEXP gap_overlap(SEXP pQid, SEXP pQlstart, SEXP pQlend, SEXP pQrstart, SEXP pQre
 				}
 			}
 			++j;
-			if(j == nr)
-				break;
 		}
 		//Rprintf("\n");
 
@@ -1728,7 +1752,7 @@ void R_init_refGenome(DllInfo *info)
 			{ "read_gtf",				(DL_FUNC) &read_gtf,                2},
 			{ "get_exon_number",		(DL_FUNC) &get_exon_number,       	4},
 			{ "get_splice_juncs",		(DL_FUNC) &get_splice_juncs,		4},
-			{ "unify_splice_juncs",		(DL_FUNC) &unify_splice_juncs,		8},
+			{ "unify_splice_juncs",		(DL_FUNC) &unify_splice_juncs,		9},
 			{ "unify_genomic_ranges",	(DL_FUNC) &unify_genomic_ranges,	4},
 			{ "overlap_ranges",			(DL_FUNC) &overlap_ranges,			6},
 			{ "get_cum_max",			(DL_FUNC) &get_cum_max,				1},

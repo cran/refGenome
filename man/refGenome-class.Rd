@@ -14,7 +14,7 @@
 %
 \alias{extractFeature}
 \alias{extractFeature-methods}
-\alias{extractFeature,refGenome-method}
+\alias{extractFeature,refGenome,character-method}
 %
 \alias{extractSeqids}
 \alias{extractSeqids-methods}
@@ -22,7 +22,7 @@
 %
 \alias{extractTranscript}
 \alias{extractTranscript-methods}
-\alias{extractTranscript,refGenome-method}
+\alias{extractTranscript,refGenome,character-method}
 %
 \alias{getGtf}
 \alias{getGtf-methods}

@@ -51,6 +51,10 @@ an object of class \code{refGenome} (ensemblGenome or ucscGenome).
             of existing tables.)}
         %
 }}
+\details{The getSpliceTable function eventually contains a "transcript_biotype"
+column (present in Ensembl genome). This coulumn is used by the "unifyJuncs"-
+method.
+}
 \references{
 http://www.ensembl.org/info/data/ftp/index.html
 http://mblab.wustl.edu/GTF22.html#fields

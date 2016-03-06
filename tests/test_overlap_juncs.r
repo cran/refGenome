@@ -1,8 +1,8 @@
 
 
-## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-## Requires: Initialized objects (as done by test-all.R header)
-## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Requires: Initialized objects (as done by test-all.R header)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
 
 ##                      1       2       3       4       5       6       7 ##
@@ -24,9 +24,9 @@ if(sum(res$nref) != 27)
     stop("[test_overlap_juncs] Wrong sum of res$nref.")
 
 
-## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-## Test overhang codes (No requirements)
-## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Test overhang codes (No requirements)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 rid     <- 1L
 rLstart <- 1000L
 rLend   <- 2000L
@@ -47,6 +47,6 @@ if(!all(dfr$ovhl==c("inp","int","ext",rep("no",4))))
 if(!all(dfr$ovhr==c(rep("no",4),"ext","int","inp")))
     stop("[test_overlap_juncs] Wrong ovhr codes")
 
-## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-## END OF FILE
-## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# END OF FILE
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #

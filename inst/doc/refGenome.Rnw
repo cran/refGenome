@@ -297,6 +297,12 @@ When gene-names did not match in the gtf-table of the object,
 a message including all names of not matching gene-names will be printed.
 When no gene-name matches, a message will be printed and the function
 returns \Robject{NULL}, which can be tested for later on.\\
+\\
+Additionally subsets can also be extacted based on gene-id
+<<echo=TRUE>>=
+dxe <- extractByGeneId(enpa, "ENSG00000223972")
+dxu <- extractByGeneId(ucpa, "ENSG00000223972")
+@
 %
 From these extracts we can view the contained transcripts with the 
 \rfc{tableTranscript.id} function:
@@ -407,8 +413,8 @@ ujens <- unifyJuncs(jens)
 ujuc <- unifyJuncs(juc)
 jeg <- getGenePositions(jens)
 jug <- getGenePositions(juc)
-head(ujens)
-head(jug)
+ujens
+jug
 @
 %
 The result tables of \rfc{unifyJuncs} and \rfc{getGenePositions} are stored 

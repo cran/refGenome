@@ -1,9 +1,10 @@
 \name{getGenePositions}
 \alias{getGenePositions}
 \alias{getGenePositions-methods}
-\alias{getGenePositions,ensemblGenome-method}
-\alias{getGenePositions,ucscGenome-method}
-\alias{getGenePositions,refJunctions-method}
+\alias{getGenePositions,ensemblGenome,character-method}
+\alias{getGenePositions,ensemblGenome,missing-method}
+\alias{getGenePositions,ucscGenome,ANY-method}
+\alias{getGenePositions,refJunctions,ANY-method}
 \title{Extract subsets of refGenome by gene-name.}
 \description{
 The function searches in the given data for unique \code{gene_id} values.

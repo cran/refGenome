@@ -36,12 +36,16 @@
 ##                                              valgrind tested              ##
 ##  07.08.13  :   refGenome_1.1.0 on CRAN                                    ##
 ##  08.08.13  :   Corrected generic for extractByGeneName (refGenome_1.1.0)  ##
+##  04.12.13  :   refGenome_1.2.0 on CRAN                                    ##
+##                                                                           ##
+##  18.09.14  :   refGenome_1.3.0 on CRAN                                    ##
 ##                                                                           ##
 ##  07.07.14  :   Added R_init_refGenome                                     ##
 ##  08.07.14  :   Added overlapJuncs function (1.2.5)                        ##
 ##  10.07.14  :   Added tests which are executed in R CMD check              ##
 ##                                                                           ##
 ##  30.06.15  :   New C++ based implementation of GTF import (1.4.2)         ##
+##  20.07.15  :   refGenome_1.5.6 on CRAN                                    ##
 ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
 
 .onUnload<-function(libpath) { library.dynam.unload("refGenome", libpath) }
@@ -197,6 +201,9 @@ setGeneric("extractTranscript", function(object, transcripts)
 
 setGeneric("extractByGeneName", function(object, geneNames, src, ...)
                                         standardGeneric("extractByGeneName"))
+
+setGeneric("extractByGeneId", function(object, geneids, ...)
+                                        standardGeneric("extractByGeneId"))
 
 setGeneric("getGenePositions", function(object, by, force = FALSE, ...)
                                         standardGeneric("getGenePositions"))
@@ -416,14 +423,7 @@ setMethod("writeDB", "refGenome", function(object, filename, useBasedir=TRUE, ..
     cat("[writeDB.refGenome]", format(nrow(object@ev$gtf), big.mark=bm),
                                             "rows written to table 'gtf'.\n")
   }
-  if(exists("gtfattributes", where=object@ev, inherits=FALSE))
-  {
-    dbWriteTable(con, "gtfattributes", object@ev$gtfattributes,
-                                            append=FALSE, overwrite=TRUE)
 
-    cat("[writeDB.refGenome]", format(nrow(object@ev$gtfattributes),
-                    big.mark=bm), "rows written to table 'gtfattributes'.\n")
-  }
   if(exists("xref", where=object@ev, inherits=FALSE))
   {
     if(nrow(object@ev$xref)>0)
@@ -461,14 +461,13 @@ loadGenomeDb <- function(filename)
     }
   }
   copy_table(dbcon, "gtf")
-  copy_table(dbcon, "gtfattributes")
   copy_table(dbcon, "xref")
   copy_table(dbcon, "genes")
   copy_table(dbcon, "ujs")
   return(ref)
 }
 
-setMethod("extractByGeneName", "refGenome", function(object, geneNames, ...)
+setMethod("extractByGeneId", c("refGenome", "character"), function(object, geneids, ...)
 {
     if(!exists("gtf", where = object@ev, inherits = FALSE))
         stop("gtf table does not exist! Use 'read.gtf'.")
@@ -476,8 +475,104 @@ setMethod("extractByGeneName", "refGenome", function(object, geneNames, ...)
     if(is.na(match("gene_name", names(object@ev$gtf))))
         stop("'gene_name' column does not exist in 'gtf' table!")
 
-    if(!is.character(geneNames))
-        stop("geneNames must be character!")
+    #if(!is.character(geneNames))
+    #    stop("geneNames must be character!")
+
+    mtc <- match(geneids, object@ev$gtf$gene_id)
+    if(any(is.na(mtc)))
+    {
+        message("Missing matches for ", sum(is.na(mtc)),
+                " gene_ID(s):\n", sep = "")
+
+        print(geneids[is.na(mtc)])
+        if(all(is.na(mtc)))
+            return(invisible(NULL))
+    }
+
+    mtc <- mtc[!is.na(mtc)]
+    # Retrieving gene_id's for geneids
+    dtb <- data.frame(gene_name = object@ev$gtf$gene_name[mtc])
+
+    # Returning all rows that match with found gene_name's
+    gtf <- merge(object@ev$gtf, dtb)
+
+    # Re-calibrate factor levels
+    fc <- which(unlist(lapply(gtf,class)) == "factor")
+    gtf[ , fc] <- data.frame(lapply(gtf[ , fc], factor))
+
+    gtf <- gtf[order(gtf$gene_name,gtf$start), ]
+
+    # Assemble result object
+    res <- new(class(object))
+    basedir(res) <- basedir(object)
+    assign("gtf", gtf, envir = res@ev)
+    
+    if(exists("genes", envir=object@ev))
+    {
+        mtc <- match(geneids, object@ev$genes$gene_id)
+        assign("genes", object@ev$genes[mtc, ], envir=res@ev)
+    }
+    
+    return(res)
+})
+
+setMethod("extractByGeneId", c("refJunctions", "character"), function(object, geneids, ...)
+{
+    if(!exists("gtf", where = object@ev, inherits = FALSE))
+        stop("gtf table does not exist! Use 'read.gtf'.")
+    
+    if(is.na(match("gene_name", names(object@ev$gtf))))
+        stop("'gene_name' column does not exist in 'gtf' table!")
+    
+    #if(!is.character(geneNames))
+    #    stop("geneNames must be character!")
+    
+    mtc <- match(geneids, object@ev$gtf$gene_id)
+    if(any(is.na(mtc)))
+    {
+        message("Missing matches for ", sum(is.na(mtc)),
+                " gene_ID(s):\n", sep = "")
+        
+        print(geneids[is.na(mtc)])
+        if(all(is.na(mtc)))
+            return(invisible(NULL))
+    }
+    
+    mtc <- mtc[!is.na(mtc)]
+    # Retrieving gene_id's for geneids
+    dtb <- data.frame(gene_name = object@ev$gtf$gene_name[mtc])
+    
+    # Returning all rows that match with found gene_name's
+    gtf <- merge(object@ev$gtf, dtb)
+    
+    # Re-calibrate factor levels
+    fc <- which(unlist(lapply(gtf,class)) == "factor")
+    gtf[ , fc] <- data.frame(lapply(gtf[ , fc], factor))
+    
+    gtf <- gtf[order(gtf$gene_name,gtf$lend), ]
+    
+    # Assemble result object
+    res <- new(class(object))
+    basedir(res) <- basedir(object)
+    assign("gtf", gtf, envir = res@ev)
+    
+    if(exists("genes", envir=object@ev))
+    {
+        mtc <- match(geneids, object@ev$genes$gene_id)
+        assign("genes", object@ev$genes[mtc, ], envir=res@ev)
+    }
+    
+    return(res)
+})
+
+
+setMethod("extractByGeneName", c("refGenome", "character"), function(object, geneNames, ...)
+{
+    if(!exists("gtf", where = object@ev, inherits = FALSE))
+        stop("gtf table does not exist! Use 'read.gtf'.")
+
+    if(is.na(match("gene_name", names(object@ev$gtf))))
+        stop("'gene_name' column does not exist in 'gtf' table!")
 
     mtc <- match(geneNames,object@ev$gtf$gene_name)
     if(any(is.na(mtc)))
@@ -501,54 +596,69 @@ setMethod("extractByGeneName", "refGenome", function(object, geneNames, ...)
     fc <- which(unlist(lapply(gtf,class)) == "factor")
     gtf[ , fc] <- data.frame(lapply(gtf[ , fc], factor))
 
-    gtf <- gtf[order(gtf$gene_name,gtf$start), ]
+    gtf <- gtf[order(gtf$gene_name, gtf$start), ]
 
     # Assemble result object
     res <- new(class(object))
     basedir(res) <- basedir(object)
-    assign("gtf", gtf[order(gtf$seqid,gtf$start), ], envir = res@ev)
+    assign("gtf", gtf, envir = res@ev)
+    
+    if(exists("genes", envir=object@ev))
+    {
+        mtc <- match(geneNames, object@ev$genes$gene_name)
+        assign("genes", object@ev$genes[mtc, ], envir=res@ev)
+    }
+    
     return(res)
 })
 
-
-setMethod("extractByGeneName", "refJunctions", function(object, geneNames, ...)
+setMethod("extractByGeneName", c("refJunctions", "character"), function(object, geneNames, ...)
 {
+    if(!exists("gtf", where = object@ev, inherits = FALSE))
+        stop("gtf table does not exist! Use 'read.gtf'.")
+    
     if(is.na(match("gene_name", names(object@ev$gtf))))
         stop("'gene_name' column does not exist in 'gtf' table!")
-
-    if(!is.character(geneNames))
-        stop("geneNames must be character!")
-
-    mtc<-match(geneNames,object@ev$gtf$gene_name)
+    
+    mtc <- match(geneNames,object@ev$gtf$gene_name)
     if(any(is.na(mtc)))
     {
         message("Missing matches for ", sum(is.na(mtc)),
-                                        " gene_name(s):\n", sep = "")
-
+                " gene_name(s):\n", sep = "")
+        
         print(geneNames[is.na(mtc)])
         if(all(is.na(mtc)))
             return(invisible(NULL))
     }
-
+    
     mtc <- mtc[!is.na(mtc)]
     # Retrieving gene_id's for geneNames
     dtb <- data.frame(gene_name = object@ev$gtf$gene_name[mtc])
-
+    
     # Returning all rows that match with found gene_name's
     gtf <- merge(object@ev$gtf, dtb)
-
+    
     # Re-calibrate factor levels
     fc <- which(unlist(lapply(gtf,class)) == "factor")
     gtf[ , fc] <- data.frame(lapply(gtf[ , fc], factor))
-
-    gtf <- gtf[order(gtf$gene_name,gtf$seqid,gtf$lstart), ]
-
+    
+    gtf <- gtf[order(gtf$gene_name, gtf$lend), ]
+    
     # Assemble result object
     res <- new(class(object))
     basedir(res) <- basedir(object)
-    assign("gtf", gtf[order(gtf$seqid,gtf$lstart), ], envir = res@ev)
+    assign("gtf", gtf, envir = res@ev)
+    
+    if(exists("genes", envir=object@ev))
+    {
+        mtc <- match(geneNames, object@ev$genes$gene_name)
+        assign("genes", object@ev$genes[mtc, ], envir=res@ev)
+    }
+    
     return(res)
 })
+
+
 
 ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
 ##                                                                           ##
@@ -794,73 +904,80 @@ setMethod("tableFeatures", "ucscGenome", function(object)
 {return(table(object@ev$gtf$feature))})
 
 
-setMethod("extractFeature", "refGenome", function(object, feature="exon")
+setMethod("extractFeature", c("refGenome", "character"), function(object, feature="exon")
 {
-  if(!exists("gtf", where=object@ev, inherits=FALSE))
-    return(NULL)
-  if(!is.data.frame(object@ev$gtf))
-    stop("[extractFeature.ensemblGenome] gtf-table must be data.frame!")
-  if(!is.character(feature))
-    stop("[extractFeature.ensemblGenome] feature must be character")
-  if(length(feature)>1)
-    stop("[extractFeature.ensemblGenome] feature must have length 1!")
-  # Returning all rows that has "CDS" feature
-  ev <- new.env()
-  gtf <- object@ev$gtf[object@ev$gtf$feature==feature, ]
-
-  # Re-calibrate factor levels
-  fc <- which(unlist(lapply(gtf, class))=="factor")
-  gtf[, fc] <- data.frame(lapply(gtf[, fc], factor))
-
-  # Assemble result object
-  res <- new(class(object))
-  basedir(res) <- basedir(object)
-  assign("gtf", gtf[order(gtf$seqid, gtf$start), ], envir=res@ev)
-  if(exists("gtfattributes", where=object@ev, inherits=FALSE))
-  {
-    # Should only be present in ensemblGenome
-    tbl <- data.frame(id=ev$gtf$id)
-    assign("gtfattributes", merge(object@ev$gtfattributes, tbl), envir=res@ev)
-  }
-  return(res)
+    if(!exists("gtf", where=object@ev, inherits=FALSE))
+        return(NULL)
+    
+    if(!is.data.frame(object@ev$gtf))
+        stop("gtf-table must be data.frame!")
+    
+    if(length(feature) > 1)
+    {
+        warning("[extractFeature.ensemblGenome] Only first feature is used!")
+        feature <- feature[1]
+    }
+    
+    # Returning all rows that has "CDS" feature
+    ev <- new.env()
+    gtf <- object@ev$gtf[object@ev$gtf$feature==feature, ]
+    
+    # Re-calibrate factor levels
+    fc <- which(unlist(lapply(gtf, class))=="factor")
+    gtf[, fc] <- data.frame(lapply(gtf[, fc], factor))
+    
+    # Assemble result object
+    res <- new(class(object))
+    basedir(res) <- basedir(object)
+    assign("gtf", gtf[order(gtf$seqid, gtf$start), ], envir=res@ev)
+    
+    # Also copy an extract of gene-table into target
+    if(exists("genes", envir=object@ev))
+    {
+        geneids <- unique(object@ev$gtf$gene_id)
+        mtc <- match(geneids, object@ev$genes$gene_id)
+        assign("genes", object@ev$genes[mtc, ], envir=res@ev)
+    }
+    
+    return(res)
 })
 
 
-setMethod("extractTranscript", "refGenome", function(object, transcripts)
+setMethod("extractTranscript", c("refGenome", "character"), function(object, transcripts)
 {
-  if(!exists("gtf", where=object@ev, inherits=FALSE))
-    stop("gtf table does not exist! Use 'read.gtf'.")
-
-  if(is.na(match("transcript_id", names(object@ev$gtf))))
-    stop("'transcript_id' column does not exist in 'gtf' table!")
-
-  if(!is.character(transcripts))
-    stop("[extractTranscript.ensemblGenome] transcripts must be character!")
-
-  mtc <- match(transcripts, object@ev$gtf$transcript_id)
-  if(any(is.na(mtc)))
-  {
-    cat("[extractTranscript.ensemblGenome] Missing matches for ", sum(is.na(mtc)), " transcripts:\n", sep="")
-    print(transcripts[is.na(mtc)])
-  }
-  # reorder (transcrpt_id)
-  dtb <- data.frame(transcript_id=transcripts)
-
-  # Extract and re-calibrate factor levels
-  gtf <- merge(object@ev$gtf, dtb)
-  fc <- which(unlist(lapply(gtf, class))=="factor")
-  gtf[, fc] <- data.frame(lapply(gtf[, fc], factor))
-
-  res <- new(class(object))
-  basedir(res) <- basedir(object)
-  assign("gtf", gtf, envir=res@ev)
-  if(exists("gtfattributes", where=object@ev, inherits=FALSE))
-  {
-    # Should only be present in ensemblGenome
-    tbl <- data.frame(id=res@ev$gtf$id)
-    assign("gtfattributes", merge(object@ev$gtfattributes, tbl), envir=res@ev)
-  }
-  return(res)
+    if(!exists("gtf", where=object@ev, inherits=FALSE))
+        stop("gtf table does not exist! Use 'read.gtf'.")
+    
+    if(is.na(match("transcript_id", names(object@ev$gtf))))
+        stop("'transcript_id' column does not exist in 'gtf' table!")
+    
+    mtc <- match(transcripts, object@ev$gtf$transcript_id)
+    if(any(is.na(mtc)))
+    {
+        cat("[extractTranscript.ensemblGenome] Missing matches for ", sum(is.na(mtc)), " transcripts:\n", sep="")
+        print(transcripts[is.na(mtc)])
+    }
+    # reorder (transcrpt_id)
+    dtb <- data.frame(transcript_id=transcripts)
+    
+    # Extract and re-calibrate factor levels
+    gtf <- merge(object@ev$gtf, dtb)
+    fc <- which(unlist(lapply(gtf, class))=="factor")
+    gtf[, fc] <- data.frame(lapply(gtf[, fc], factor))
+    
+    res <- new(class(object))
+    basedir(res) <- basedir(object)
+    assign("gtf", gtf, envir=res@ev)
+    
+    # Also copy an extract of gene-table into target
+    if(exists("genes", envir=object@ev))
+    {
+        geneids <- unique(object@ev$gtf$gene_id)
+        mtc <- match(geneids, object@ev$genes$gene_id)
+        assign("genes", object@ev$genes[mtc, ], envir=res@ev)
+    }
+    
+    return(res)
 })
 
 
@@ -888,111 +1005,124 @@ setMethod("tableTranscript.id", "ucscGenome", function(object)
 
 setMethod("tableTranscript.name", "ensemblGenome", function(object)
 {
-  if(!exists("gtf", where=object@ev, inherits=FALSE))
-    stop("gtf table does not exist! Use 'read.gtf'.")
-
-  if(is.na(match("transcript_name", names(object@ev$gtf))))
-    stop("gtf table does not contain column 'transcript_name'!")
-
-  return(table(object@ev$gtf$transcript_name))
+    if(!exists("gtf", where=object@ev, inherits=FALSE))
+        stop("gtf table does not exist! Use 'read.gtf'.")
+    
+    if(is.na(match("transcript_name", names(object@ev$gtf))))
+        stop("gtf table does not contain column 'transcript_name'!")
+    
+    return(table(object@ev$gtf$transcript_name))
 })
 
 
 
-setMethod("getGenePositions", "ensemblGenome", function(object, by, force = FALSE, ...)
+setMethod("getGenePositions", c("ensemblGenome","character"), function(object, by, force = FALSE, ...)
 {
-  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-  if(!is.logical(force))
-    stop("[getGenePositions.ensemblGenome] force must be logical!")
-
-  # Copy of table will be in ev -> positions
-  # need only once be calculated.
-  if(exists("genes", where=object@ev, inherits=FALSE) & !force)
-    return(object@ev$genes)
-
-  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-  # Differing by 'gene_id' makes sense for Ensembl
-  if(missing(by))
-    by <- "gene_id"
-  if(!is.character(by))
-    stop("'by' must be character!")
-
-
-  if(!exists("gtf", where=object@ev, inherits=FALSE))
-    return(NULL)
-  if(!is.data.frame(object@ev$gtf))
-    stop("gtf-table must be data.frame!")
-
-  if(is.na(match("gene_name", names(object@ev$gtf))))
-    stop("No 'gene_name' data found!")
-
-  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-  if(by=="gene_id")
-  {
-    # Get (sorted) gene_id's
-    # (as.numeric(genes)==1:n! asc sorted!)
-    genes <- factor(levels(object@ev$gtf$gene_id))
-    n <- length(genes)
-    # Point back into source table
-    mtc <- match(genes, object@ev$gtf$gene_id)
-
-    # Min start position (table has same order as genes!)
-    mig <- summaryBy(start~gene_id, data=object@ev$gtf, FUN=min)
-    # Max end   position (table has same order as genes!)
-    mxg <- summaryBy(end~gene_id, data=object@ev$gtf, FUN=max)
-  }
-  else if(by=="gene_name")
-  {
-    # Get (sorted) gene_id's
-    # (as.numeric(genes)==1:n! asc sorted!)
-    genes <- factor(levels(object@ev$gtf$gene_name))
-    n <- length(genes)
-    # Point back into source table
-    mtc <- match(genes, object@ev$gtf$gene_name)
-
-    # Min start position (table has same order as genes!)
-    mig <- summaryBy(start~gene_name, data=object@ev$gtf, FUN=min)
-    # Max end   position (table has same order as genes!)
-    mxg <- summaryBy(end~gene_name, data=object@ev$gtf, FUN=max)
-  }
-  else
-    stop("[getGenePositions.ensemblGenome] by must be 'gene_id' or 'gene_name'!")
-
-  # Assemble result
-  if(is.na(match("gene_biotype", names(object@ev$gtf))))
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    if(!is.logical(force))
+        stop("[getGenePositions.ensemblGenome] force must be logical!")
+    
+    # Copy of table will be in ev -> positions
+    # need only once be calculated.
+    if(exists("genes", where=object@ev, inherits=FALSE) & !force)
+        return(object@ev$genes)
+    
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Differing by 'gene_id' makes sense for Ensembl
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    if(missing(by))
+        by <- "gene_id"
+    if(!is.character(by))
+        stop("'by' must be character!")
+    
+    
+    if(!exists("gtf", where=object@ev, inherits=FALSE))
+        return(NULL)
+    if(!is.data.frame(object@ev$gtf))
+        stop("gtf-table must be data.frame!")
+    
+    if(is.na(match("gene_name", names(object@ev$gtf))))
+        stop("No 'gene_name' data found!")
+    
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Different gene-identifications
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    if(by=="gene_id")
+    {
+        # Get (sorted) gene_id's
+        # (as.numeric(genes)==1:n! asc sorted!)
+        genes <- factor(levels(object@ev$gtf$gene_id))
+        n <- length(genes)
+        # Point back into source table
+        mtc <- match(genes, object@ev$gtf$gene_id)
+        
+        # Min start position (table has same order as genes!)
+        mig <- summaryBy(start~gene_id, data=object@ev$gtf, FUN=min)
+        # Max end   position (table has same order as genes!)
+        mxg <- summaryBy(end~gene_id, data=object@ev$gtf, FUN=max)
+    }
+    else if(by=="gene_name")
+    {
+        # Get (sorted) gene_id's
+        # (as.numeric(genes)==1:n! asc sorted!)
+        genes <- factor(levels(object@ev$gtf$gene_name))
+        n <- length(genes)
+        # Point back into source table
+        mtc <- match(genes, object@ev$gtf$gene_name)
+        
+        # Min start position (table has same order as genes!)
+        mig <- summaryBy(start~gene_name, data=object@ev$gtf, FUN=min)
+        # Max end   position (table has same order as genes!)
+        mxg <- summaryBy(end~gene_name, data=object@ev$gtf, FUN=max)
+    }
+    else
+        stop("[getGenePositions.ensemblGenome] by must be 'gene_id' or 'gene_name'!")
+    
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Assemble result
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    if(is.na(match("gene_biotype", names(object@ev$gtf))))
     {
         res <- data.frame(id = 1:n,  gene_id = object@ev$gtf$gene_id[mtc],
-                gene_name = object@ev$gtf$gene_name[mtc],
-                seqid = object@ev$gtf$seqid[mtc],
-                start = mig[, 2],
-                end = mxg[, 2],
-                strand = object@ev$gtf$strand[mtc])
-
+                          gene_name = object@ev$gtf$gene_name[mtc],
+                          seqid = object@ev$gtf$seqid[mtc],
+                          start = mig[, 2],
+                          end = mxg[, 2],
+                          strand = object@ev$gtf$strand[mtc])
+        
     }else{
         res <- data.frame(id = 1:n, gene_id = object@ev$gtf$gene_id[mtc],
-                gene_name = object@ev$gtf$gene_name[mtc],
-                seqid = object@ev$gtf$seqid[mtc],
-                start = mig[, 2],
-                end=mxg[, 2],
-                strand = object@ev$gtf$strand[mtc],
-                gene_biotype = object@ev$gtf$gene_biotype[mtc])
-  }
+                          gene_name = object@ev$gtf$gene_name[mtc],
+                          seqid = object@ev$gtf$seqid[mtc],
+                          start = mig[, 2],
+                          end=mxg[, 2],
+                          strand = object@ev$gtf$strand[mtc],
+                          gene_biotype = object@ev$gtf$gene_biotype[mtc])
+    }
+    
+    message("[getGenePositions.ensemblGenome] Adding 'start_codon' and 'stop_codon' positions.")
+    strt <- extractFeature(object, "start_codon")@ev$gtf
+    mtc <- match(res$gene_id, strt$gene_id)
+    stap <- strt$start[mtc]
+    stam <- strt$end[mtc]
+    res$start_codon <- ifelse(res$strand=='+', stap, stam)
+    stpp <- extractFeature(object, "stop_codon")@ev$gtf
+    mtc <- match(res$gene_id, stpp$gene_id)
+    sttp <- stpp$start[mtc]
+    sttm <- stpp$end[mtc]
+    res$stop_codon <- ifelse(res$strand=='+', sttp, sttm)
+    
+    res <- res[order(res$seqid, res$start), ]
+    assign("genes", res, envir=object@ev)
+    return(invisible(res))
+})
 
-  message("[getGenePositions.ensemblGenome] Adding 'start_codon' and 'stop_codon' positions.")
-  strt <- extractFeature(object, "start_codon")@ev$gtf
-  mtc <- match(res$gene_id, strt$gene_id)
-  stap <- strt$start[mtc]
-  stam <- strt$end[mtc]
-  res$start_codon <- ifelse(res$strand=='+', stap, stam)
-  stpp <- extractFeature(object, "stop_codon")@ev$gtf
-  mtc <- match(res$gene_id, stpp$gene_id)
-  sttp <- stpp$start[mtc]
-  sttm <- stpp$end[mtc]
-  res$stop_codon <- ifelse(res$strand=='+', sttp, sttm)
-
-  res <- res[order(res$seqid, res$start), ]
-  assign("genes", res, envir=object@ev)
-  return(invisible(res))
+setMethod("getGenePositions", c("ensemblGenome","missing"), function(object, by, force = FALSE, ...)
+{
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Differing by 'gene_id' makes sense for Ensembl
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    return(getGenePositions(object=object, by="gene_id", force=force, ...))
 })
 
 
@@ -1289,39 +1419,39 @@ setMethod("plotUbs", "unifiedExons", function(object,
 
 setMethod("getSpliceTable", "refGenome", function(object)
 {
-    ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-    ## Prepare input table
-    ## Filter for exons
-    ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-  if(is(object, "refExons"))
-    gtf <- object@ev$gtf
-  else
-    gtf <- object@ev$gtf[object@ev$gtf$feature=="exon", ]
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Prepare input table
+    # Filter for exons
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    if(is(object, "refExons"))
+        gtf <- object@ev$gtf
+    else
+        gtf <- object@ev$gtf[object@ev$gtf$feature=="exon", ]
 
-  # Shape and sort input values
-  gtf <- gtf[!is.na(gtf$transcript_id), ]
-  dfr <- data.frame(tr=as.integer(factor(gtf$transcript_id)),
-                  sq=as.integer(factor(gtf$seqid)),
-                  st=as.integer(gtf$start),
-                  en=as.integer(gtf$end),
-                  id=gtf$id
-  )
-  dfr <- dfr[order(dfr$tr, dfr$sq, dfr$st), ]
+    # Shape and sort input values
+    gtf <- gtf[!is.na(gtf$transcript_id), ]
+    dfr <- data.frame(tr=as.integer(factor(gtf$transcript_id)),
+                    sq=as.integer(factor(gtf$seqid)),
+                    st=as.integer(gtf$start),
+                    en=as.integer(gtf$end),
+                    id=gtf$id
+    )
+    dfr <- dfr[order(dfr$tr, dfr$sq, dfr$st), ]
 
-  ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-  ## Junction assembly in C
-  ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-  res  <-  .Call("get_splice_juncs",  dfr$tr,  dfr$id,  dfr$st,
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Junction assembly in C
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    res  <-  .Call("get_splice_juncs",  dfr$tr,  dfr$id,  dfr$st,
                                                 dfr$en, PACKAGE="refGenome")
 
 
-  ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-  ## Assembly of result table
-  ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-  n <- nrow(res)
-  mtc <- match(res$lexid, object@ev$gtf$id)
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Assembly of result table
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    n <- nrow(res)
+    mtc <- match(res$lexid, object@ev$gtf$id)
 
-  junc <- data.frame(id=1:n, seqid=factor(object@ev$gtf$seqid[mtc]),
+    junc <- data.frame(id=1:n, seqid=factor(object@ev$gtf$seqid[mtc]),
                    lstart=res$lstart, lend=res$lend,
                    rstart=res$rstart, rend=res$rend,
                    gene_id=factor(object@ev$gtf$gene_id[mtc]),
@@ -1330,55 +1460,81 @@ setMethod("getSpliceTable", "refGenome", function(object)
                    transcript_id=factor(object@ev$gtf$transcript_id[mtc]),
                    lexid=res$lexid, rexid=res$rexid)
 
-  ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-  ## Construct instance of returned class
-  ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-  if(is(object, "ensemblGenome")|| is(object, "ensemblExons"))
-    res <- ensemblJunctions(basedir(object))
-  else
-    res <- ucscJunctions(basedir(object))
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Eventually add column (used in unifyJuncs for determination of
+    # NMD = nonsense mediated decay)
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    if(!is.na(match("transcript_biotype", names(object@ev$gtf))))
+        junc$transcript_biotype <- object@ev$gtf$transcript_biotype[mtc]
 
-  res@ev$gtf <- junc
-  #assign("gtf", junc, envir=res@ev)
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Construct instance of returned class
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    if(is(object, "ensemblGenome")|| is(object, "ensemblExons"))
+        res <- ensemblJunctions(basedir(object))
+    else
+        res <- ucscJunctions(basedir(object))
 
-  # Should only be present in ensemblGenomes
-  if(exists("genes", where=object@ev, inherits=FALSE))
-      res@ev$genes <- object@ev$genes
+    res@ev$gtf <- junc
+
+    # Should only be present in ensemblGenomes
+    if(exists("genes", where=object@ev, inherits=FALSE))
+        res@ev$genes <- object@ev$genes
 
 
-  cat("[getSpliceTable.refGenome] Finished.\n")
-  return(res)
+    cat("[getSpliceTable.refGenome] Finished.\n")
+    return(res)
 })
 
 
 setMethod("unifyJuncs", "refJunctions", function(object){
 
-    ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-    ## Prepare input table
-    ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
-    dfr <- data.frame(seqid = as.integer(object@ev$gtf$seqid),
-                lstart = object@ev$gtf$lstart,
-                lend = object@ev$gtf$lend,
-                rstart = object@ev$gtf$rstart,
-                rend = object@ev$gtf$rend,
-                id = object@ev$gtf$id,
-                gene_id = as.integer(object@ev$gtf$gene_id),
-                strand = as.integer(object@ev$gtf$strand))
+    # Create shortcut reference
+    gtf <- object@ev$gtf
 
-  dfr <- dfr[order(dfr$seqid, dfr$lend, dfr$rstart), ]
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Check whether feature is not of type NMD (nonsense mediated decay).
+    # This will later be used to determine whether a junction
+    # is present in any non-NMD Transcript at all.
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    mtc <- match("transcript_biotype", names(gtf))
+    if(!is.na(mtc))
+    {
+        nnmd <- as.integer(gtf$transcript_biotype != "nonsense_mediated_decay")
+    }else{
+        nnmd <- rep(0L, nrow(gtf))
+    }
 
-  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-  # Junction unifications C
-  ujc <- .Call("unify_splice_juncs", dfr$seqid, dfr$lstart, dfr$lend, dfr$rstart,
-             dfr$rend, dfr$id, dfr$gene_id, dfr$strand, PACKAGE="refGenome")
 
-  # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-  # Assembly of result table
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Prepare input table
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    dfr <- data.frame(seqid = as.integer(gtf$seqid),
+                lstart = gtf$lstart,
+                lend = gtf$lend,
+                rstart = gtf$rstart,
+                rend = gtf$rend,
+                id = gtf$id,
+                gene_id = as.integer(gtf$gene_id),
+                strand = as.integer(gtf$strand),
+                nnmd = nnmd)
 
-  # Create factors from numeric values and remove unused levels
-  seql <- 1:length(levels(object@ev$gtf$seqid))
-  genl <- 1:length(levels(object@ev$gtf$gene_id))
-  strl <- 1:length(levels(object@ev$gtf$strand))
+    dfr <- dfr[order(dfr$seqid, dfr$lend, dfr$rstart), ]
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Junction unifications in C
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    ujc <- .Call("unify_splice_juncs", dfr$seqid, dfr$lstart, dfr$lend,
+                dfr$rstart, dfr$rend,
+                dfr$id, dfr$gene_id, dfr$strand, dfr$nnmd, PACKAGE="refGenome")
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Assembly of result table
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Create factors from numeric values and remove unused levels
+    seql <- 1:length(levels(object@ev$gtf$seqid))
+    genl <- 1:length(levels(object@ev$gtf$gene_id))
+    strl <- 1:length(levels(object@ev$gtf$strand))
 
     ujs <- data.frame(id=ujc$id,
             seqid = factor(ujc$seqid,  levels = seql,
@@ -1392,19 +1548,33 @@ setMethod("unifyJuncs", "refJunctions", function(object){
                                         labels = levels(object@ev$gtf$gene_id)),
             strand = factor(ujc$strand,  levels=strl,
                                         labels = levels(object@ev$gtf$strand)),
-            fexid = ujc$fexid)
+            fexid = ujc$fexid,
+            cnNmd=ujc$cnnmd)
 
+    # Add gene name
+    mtc <- match(ujs$gene_id, gtf$gene_id)
+    ujs$gene_name = factor(gtf$gene_name[mtc])
 
+    # Write a copy of the table back into source object
     assign("ujs", ujs, envir=object@ev)
-    return(invisible(ujs))
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+    # Construct instance of returned class
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+    res <- new(class(object))
+    basedir(res) <- basedir(object)
+    res@ev$gtf <- ujs
+
+    return(res)
 })
 
 
 setMethod("getGenePositions", "refJunctions",
                                     function(object, by, force = FALSE, ...)
 {
-  # Works the same way as version for ensemblGenome
-  # Only start -> lstart, end -> rend changed.
+    # Works the same way as version for ensemblGenome
+    # Only start -> lstart, end -> rend changed.
 
   # + + + + + + + + + + + + + + + + + + + + + + + + + + + +
   if(!is.logical(force))
@@ -1629,7 +1799,8 @@ overlapJuncs <- function(qry, junc)
     ## + + + + + + + + + + + + + + + ##
     mtc <- match(column_names, names(qry))
     if(any(is.na(mtc)))
-        stop("'qry' table must contain names: id, seqid, lstart, lend, rstart, rend")
+        stop("'qry' table must contain names: id, seqid,
+                                            lstart, lend, rstart, rend")
 
     # Extract qry in expected column order
     qry <- qry[ , mtc]
@@ -1654,7 +1825,8 @@ overlapJuncs <- function(qry, junc)
                 "\tRef  size : ",
                 format(nrow(ref), big.mark = bm, width = 10)
     )
-    message("[overlapJuncs] - - - - - - - - - - - - - - - - - -")
+    message("[overlapJuncs] - - - - - - - - - - - - - - - - - -",
+                            " - - - - - - - - - - - -")
 
 
     ## + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
@@ -1664,6 +1836,9 @@ overlapJuncs <- function(qry, junc)
 
     qRefNames <- levels(qry$seqid)
     nQryRefs  <- length(qRefNames)
+
+    if(all(is.na(match(qRefNames, levels(ref$seqid)))))
+        stop("No matches between query and reference seqid's (wrong genome?)")
 
     l <- list()
     k <- 1
@@ -1721,6 +1896,12 @@ overlapJuncs <- function(qry, junc)
         res$gene_name <- junc@ev$gtf$gene_name[mtc]
     }
 
+    # Check for presence of cnNmd (from unifyJuncs)
+    if(!is.na(match("cnNmd", names(junc@ev$gtf))))
+    {
+        res$nSites <- junc@ev$gtf$nSites[mtc]
+        res$cnNmd <- junc@ev$gtf$cnNmd[mtc]
+    }
 
     # Transform strand values in order to apply 'strandlevels' as factor levels
     nstrand <- as.numeric(res$strand)

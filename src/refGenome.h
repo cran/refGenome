@@ -46,8 +46,8 @@ SEXP read_gtf(SEXP pParam, SEXP pProgress);
 
 SEXP get_exon_number(SEXP pTranscript,SEXP pSeqid, SEXP pStart, SEXP pEnd);
 SEXP get_splice_juncs(SEXP pTranscript,SEXP pId,SEXP pStart,SEXP pEnd);
-SEXP unify_splice_juncs(SEXP pSeqid,SEXP pLstart,SEXP pLend,SEXP pRstart,SEXP pRend,
-												SEXP pId, SEXP pGeneId, SEXP pStrand);
+SEXP unify_splice_juncs(SEXP pSeqid, SEXP pLstart, SEXP pLend, SEXP pRstart, SEXP pRend,
+							SEXP pId, SEXP pGeneId, SEXP pStrand, SEXP pNnmd);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Removes overlaps between annotated regions

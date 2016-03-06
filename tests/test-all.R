@@ -29,7 +29,7 @@ junc<-getSpliceTable(ens)
 source("test_overlap_juncs.r")
 source("test_read_gtf.r")
 source("test_unify_ranges.r")
-
+source("test_unify_juncs.r")
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #

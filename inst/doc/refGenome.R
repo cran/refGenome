@@ -88,21 +88,28 @@ dxu <- extractByGeneName(ucpa, "DDX11L1")
 
 
 ###################################################
-### code chunk number 12: refGenome.Rnw:303-305
+### code chunk number 12: refGenome.Rnw:302-304
+###################################################
+dxe <- extractByGeneId(enpa, "ENSG00000223972")
+dxu <- extractByGeneId(ucpa, "ENSG00000223972")
+
+
+###################################################
+### code chunk number 13: refGenome.Rnw:309-311
 ###################################################
 tableTranscript.id(enpa)
 tableTranscript.id(ucpa)
 
 
 ###################################################
-### code chunk number 13: refGenome.Rnw:309-311
+### code chunk number 14: refGenome.Rnw:315-317
 ###################################################
 extractTranscript(ens, "ENST00000456328")
 extractTranscript(uc, "uc010nxr.1")
 
 
 ###################################################
-### code chunk number 14: refGenome.Rnw:328-332
+### code chunk number 15: refGenome.Rnw:334-338
 ###################################################
 gpe <- getGenePositions(ens)
 gpe
@@ -111,20 +118,20 @@ gpu
 
 
 ###################################################
-### code chunk number 15: refGenome.Rnw:355-357
+### code chunk number 16: refGenome.Rnw:361-363
 ###################################################
 enex <- refExons(ens)
 ucex <- refExons(uc)
 
 
 ###################################################
-### code chunk number 16: refGenome.Rnw:360-361
+### code chunk number 17: refGenome.Rnw:366-367
 ###################################################
 enex
 
 
 ###################################################
-### code chunk number 17: refGenome.Rnw:382-386
+### code chunk number 18: refGenome.Rnw:388-392
 ###################################################
 jens <- getSpliceTable(ens)
 jens
@@ -133,18 +140,18 @@ juc
 
 
 ###################################################
-### code chunk number 18: refGenome.Rnw:405-411
+### code chunk number 19: refGenome.Rnw:411-417
 ###################################################
 ujens <- unifyJuncs(jens)
 ujuc <- unifyJuncs(juc)
 jeg <- getGenePositions(jens)
 jug <- getGenePositions(juc)
-head(ujens)
-head(jug)
+ujens
+jug
 
 
 ###################################################
-### code chunk number 19: refGenome.Rnw:441-450
+### code chunk number 20: refGenome.Rnw:447-456
 ###################################################
 qry<-data.frame(
                   id=1:6,
@@ -158,7 +165,7 @@ overlap(qry,ref)
 
 
 ###################################################
-### code chunk number 20: refGenome.Rnw:525-535
+### code chunk number 21: refGenome.Rnw:531-541
 ###################################################
 # + + + + + + + + + + + + + + + + + + #
 # A) Example query  data
@@ -173,7 +180,7 @@ qry <- data.frame(id = 1:7, seqid = "1",
 
 
 ###################################################
-### code chunk number 21: refGenome.Rnw:544-550
+### code chunk number 22: refGenome.Rnw:550-556
 ###################################################
 ensfile <- system.file("extdata", "hs.ensembl.62.small.RData",
                                             package="refGenome")
@@ -184,13 +191,13 @@ junc <- getSpliceTable(ens)
 
 
 ###################################################
-### code chunk number 22: refGenome.Rnw:557-558
+### code chunk number 23: refGenome.Rnw:563-564
 ###################################################
 res <- overlapJuncs(qry, junc)
 
 
 ###################################################
-### code chunk number 23: refGenome.Rnw:590-623 (eval = FALSE)
+### code chunk number 24: refGenome.Rnw:596-629 (eval = FALSE)
 ###################################################
 ## library(refGenome)
 ## endir <- "/.../refGenomes/hsEns76"
