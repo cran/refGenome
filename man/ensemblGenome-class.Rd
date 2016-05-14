@@ -100,6 +100,9 @@ Objects can be created by calls of the form \code{ensemblGenome(dbfile)}.
             unless \code{force=TRUE} is given. Upon \code{force=TRUE} new gene 
             positions are calculated regardless of existing tables.)}
         %
+        \item{getGeneTable}{\code{signature(object="ucscGenome")}:
+            Returns data.frame containing gene-specific data.}
+        %
         \item{tableTranscript.name}{\code{signature(object="ensemblGenome")}:
             Extracts table object which contains tabled 'transcript_name' column
             of gtf table}

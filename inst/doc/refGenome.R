@@ -234,3 +234,72 @@ res <- overlapJuncs(qry, junc)
 ## # enju76 <- unifyJuncs(enjc76)
 
 
+###################################################
+### code chunk number 25: refGenome.Rnw:648-655
+###################################################
+ensfile<-system.file("extdata",
+    "hs.ensembl.62.small.RData", package="refGenome")
+ens<-loadGenome(ensfile)
+
+gt <- getGeneTable(ens)
+gene_id <- as.character(gt$gene_id[1])
+gm <- geneModel(ens, gene_id)
+
+
+###################################################
+### code chunk number 26: refGenome.Rnw:658-659
+###################################################
+plot(gm)
+
+
+###################################################
+### code chunk number 27: refGenome.Rnw:676-678
+###################################################
+tr <- getTranscript(gm, 1)
+tr
+
+
+###################################################
+### code chunk number 28: refGenome.Rnw:682-684
+###################################################
+tr <- getTranscript(gm, "ENST00000450305")
+tr
+
+
+###################################################
+### code chunk number 29: refGenome.Rnw:689-690
+###################################################
+getExonData(tr)
+
+
+###################################################
+### code chunk number 30: refGenome.Rnw:694-695
+###################################################
+getCdsData(tr)
+
+
+###################################################
+### code chunk number 31: refGenome.Rnw:707-714
+###################################################
+ensfile<-system.file("extdata",
+    "hs_en82_grch38_small.gtf", package="refGenome")
+
+en82s <- ensemblGenome()
+basedir(en82s) <- dirname(ensfile)
+read.gtf(en82s, "hs_en82_grch38_small.gtf")
+gt <- getGeneTable(en82s)
+
+
+###################################################
+### code chunk number 32: refGenome.Rnw:718-719
+###################################################
+gm <- geneModel(en82s, "ENSG00000227232")
+
+
+###################################################
+### code chunk number 33: refGenome.Rnw:727-729
+###################################################
+tr <- getTranscript(gm, 1)
+tr
+
+

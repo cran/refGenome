@@ -2,12 +2,16 @@
 \Rdversion{1.1}
 \docType{class}
 \alias{refExons-class}
+%
 \alias{ensemblExons-class}
 \alias{ucscExons-class}
+%
 \alias{unifiedExons-class}
+%
 \alias{refExons}
 \alias{refExons-methods}
 \alias{refExons,refGenome-method}
+%
 \alias{ensemblExons}
 \alias{ucscExons}
 

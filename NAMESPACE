@@ -5,7 +5,10 @@ import(utils)
 importFrom(doBy,summaryBy)
 importFrom(DBI, dbDriver)
 importFrom(RSQLite, dbConnect, dbDisconnect,  dbWriteTable, dbReadTable, dbExistsTable)
-importFrom(graphics, plot)
+importFrom("grDevices", "adjustcolor")
+importFrom("graphics", "arrows", "axis", "mtext", "par", "plot", "rect")
+S3method(plot, geneModel)
+S3method(plot, transcriptModel)
 exportMethods(
     addIsCoding,
     addIsoforms,
@@ -19,10 +22,16 @@ exportMethods(
     extractPaGenes,
     extractSeqids,
     extractTranscript,
+    geneList,
+    getCdsData,
+    getExonData,
+    getGeneId,
     getGenePositions,
     getGeneTable,
-    getSpliceTable,
+    geneModel,
     getGtf,
+    getSpliceTable,
+    getTranscript,
     initialize,
     plotUbs,
     read.gtf,
@@ -43,6 +52,9 @@ exportClasses(
      ensemblGenome,
      ensemblExons,
      ensemblJunctions,
+     geneList,
+     geneModel,
+     transcriptModel,
      unifiedExons,
      ucscExons,
      ucscGenome,
@@ -57,6 +69,8 @@ export(
     loadGenomeDb,
     overlap,
     overlapJuncs,
+    plot.geneModel,
+    plot.transcriptModel,
     ucPrimAssembly,
     ucscExons,
     ucscGenome,

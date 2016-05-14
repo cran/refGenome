@@ -13,6 +13,8 @@
 \alias{addXref-methods}
 \alias{addXref,ucscGenome-method}
 \alias{extractTranscript,ucscGenome-method}
+\alias{getGenePositions,ucscGenome-method}
+\alias{getGeneTable,ucscGenome-method}
 \alias{getXref}
 \alias{getXref-methods}
 \alias{getXref,ucscGenome-method}
@@ -88,7 +90,7 @@ Objects can be created by calls of the form \code{ucscGenome()}.
             Returns content of xref table. }
             
         \item{getGenePositions}{\code{signature(object="ucscGenome",
-            force="logical")}: 
+            by="character", force="logical")}: 
             Extracts table with position data for whole genes (smallest exon
             start position and largest exon end position.
             A copy of the table will be placed inside the internal environment.
@@ -96,6 +98,9 @@ Objects can be created by calls of the form \code{ucscGenome()}.
             unless \code{force=TRUE} is given. 
             Upon \code{force=TRUE} new gene positions are calculated
             regardless of existing tables.)}
+        %
+        \item{getGeneTable}{\code{signature(object="ucscGenome")}:
+            Returns data.frame containing gene-specific data.}
         %
         \item{loadGenome}{\code{signature(filename = "character")}:
             Imports data from stored R-Environment Image. }

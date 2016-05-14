@@ -53,28 +53,28 @@ annotation data, especially for Ensembl and UCSC data.
 
 The central classes inside this package are \rcl{refGenome} derived (S4)
 classes.
-The class contains two slots: ev (\rcl{environment}) and basedir 
+The class contains two slots: ev (\rcl{environment}) and basedir
 (\rcl{character}).
 All annotation data is kept in data.frames inside the \robj{ev} slot.
 Saving and loading \rcl{refGenome} derived objects works on the complete
 content of the environment.
-This mechanism also avoids generation of copies and allows addition of 
-new data inside of member functions. The basedir slot keeps a path on a 
+This mechanism also avoids generation of copies and allows addition of
+new data inside of member functions. The basedir slot keeps a path on a
 hard-disc which is intended as location where data files and object
 versions can be kept.\\
 
-The package contains three derived class lineages \rcl{refGenome}, 
+The package contains three derived class lineages \rcl{refGenome},
 \rcl{refExons} and \rcl{refJunctions}.
-For each lineage there are classes for Ensembl and UCSC defined, 
-e.g. \rcl{ensemblGenome} and \rcl{ucscGenome}. 
+For each lineage there are classes for Ensembl and UCSC defined,
+e.g. \rcl{ensemblGenome} and \rcl{ucscGenome}.
 The exon classes focus on annotated exon positions and the junction classes
 focus on adjacent exons.\\
 
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
 \subsection{Creation of empty refGenome objects}
 
-Empty objects of \rcl{refGenome} derived classes can be created with 
-\rfc{ensembleGenome()} or \rfc{ucscGenome()}. 
+Empty objects of \rcl{refGenome} derived classes can be created with
+\rfc{ensembleGenome()} or \rfc{ucscGenome()}.
 After creation of an empty object the first step usually is to set the basedir
 address:
 <<>>=
@@ -83,7 +83,7 @@ beg <- ensemblGenome()
 basedir(beg) <- system.file("extdata", package="refGenome")
 @
 
-The "basedir" folder is intended to contain all data which is associated with 
+The "basedir" folder is intended to contain all data which is associated with
 the current annotation set, e.g. downloaded gtf files, saved object data,
 saved SQLite versions of the data and potenially  sequence information.
 In order to fill an empty object, annotation data has to be imported from
@@ -92,9 +92,9 @@ external files.
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
 \subsection{Importing annotation data}
 
-The basic importing mechanism for \rcl{refGenome} objects is to import a 
-"gtf" file. 
-Therefore, the "gtf" files have to be downloaded. 
+The basic importing mechanism for \rcl{refGenome} objects is to import a
+"gtf" file.
+Therefore, the "gtf" files have to be downloaded.
 The download source and mechanism is explained for \rcl{ensemblGenome} and
 \rcl{ucscGenome} separately.
 There are specialized mechanisms in order to provide additional information
@@ -104,10 +104,10 @@ either from within the gtf file (ensembl) or via other external files (ucsc).
 \subsection{Saving and loading data}
 
 The data content of \rcl{refGenome} objects can be saved and re-loaded in
-several ways. 
+several ways.
 One way is the \rfc{saveGenome} method where the content is written into a
 compressed ".RData" file.
-One alternative is to write the content into a SQLite database via 
+One alternative is to write the content into a SQLite database via
 \rfc{writeDB}.
 
 
@@ -126,15 +126,15 @@ Therefore, go to\\
 \newline
 \url{http://www.ensembl.org/info/data/ftp/index.html}\\
 \newline
-and choose a file from the "Gene sets" column. 
+and choose a file from the "Gene sets" column.
 They are labeled "GTF".
 For example Version 62 of human genomic annotation can be downloaded from\\
 \newline
 \url{ftp://ftp.ensembl.org/pub/release-80/gtf/homo_sapiens/Homo_sapiens.GRCh38.80.gtf.gz}\\
 \newline
 A copy of the obtained file should then be placed in the the "basedir"
-directory. With the appropriate setting of basedir, 
-annotation data can be imported with: 
+directory. With the appropriate setting of basedir,
+annotation data can be imported with:
 <<echo=TRUE>>=
 ens_gtf <- "hs.ensembl.62.small.gtf"
 read.gtf(beg, ens_gtf)
@@ -148,7 +148,7 @@ The top lines of the contained table are shown when the object is printed.
 \section{UCSC Genomes}
 
 Downloading of annotation data for UCSC genomes is a bit more complicated
-than for Ensemble Genomes because additional data must be downloaded in 
+than for Ensemble Genomes because additional data must be downloaded in
 separate files.
 The Homepage for UCSC browser can be found under:\\
 %
@@ -164,7 +164,7 @@ can be found under:\\
 \url{http://genome.ucsc.edu/cgi-bin/hgTables}\\
 \newline
 %
-or by following the "Table Browser" link in the left panel on the homepage. 
+or by following the "Table Browser" link in the left panel on the homepage.
 On the Table Browser:\\
 %
 \begin{itemize}
@@ -176,13 +176,13 @@ On the Table Browser:\\
 \end{itemize}
 \vspace{1 em}
 %
-The basic table to be imported is "knownGene". 
-The knownGene table has to be downloaded in GTF format (otherwise the read.gtf 
+The basic table to be imported is "knownGene".
+The knownGene table has to be downloaded in GTF format (otherwise the read.gtf
 function will complain about "wrong number of columns").\\
 \newline
 %
 In order to extend the available information additionally the tables "kgXref",
-"knownToEnsembl" and "knownIsoforms" can be downloaded and imported. 
+"knownToEnsembl" and "knownIsoforms" can be downloaded and imported.
 These tables come in plain "csv" format. Select "all fields from selected table"
 as output format.\\
 \newline
@@ -192,7 +192,7 @@ the importing functions will check for apropriate number of columns.\\
 \newline
 %
 After downloading, all tables should be placed into a separate folder
-which we from now on call "basedir".\rcl{ucscGenome} objects keep a 
+which we from now on call "basedir".\rcl{ucscGenome} objects keep a
 \rfc{basedir} as standard location for all writing and reading procedures.\\
 %
 <<eval=FALSE>>=
@@ -229,7 +229,7 @@ There are specialized functions for extracting data for multiple purposes.
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
 \subsection{Extracting data for sets of \texttt{seqid}'s}
 
-For preparation of \texttt{seqid} based extraction, the contained 
+For preparation of \texttt{seqid} based extraction, the contained
 \texttt{seqid}'s can be tabled:
 
 <<echo=TRUE>>=
@@ -237,7 +237,7 @@ tableSeqids(ens)
 @
 
 
-Extraction of subsets based on \texttt{seqid} can be done with 
+Extraction of subsets based on \texttt{seqid} can be done with
 \texttt{extractSeqids}.
 The sequence id's for extraction are specified as regular expression:
 <<echo=TRUE>>=
@@ -304,7 +304,7 @@ dxe <- extractByGeneId(enpa, "ENSG00000223972")
 dxu <- extractByGeneId(ucpa, "ENSG00000223972")
 @
 %
-From these extracts we can view the contained transcripts with the 
+From these extracts we can view the contained transcripts with the
 \rfc{tableTranscript.id} function:
 <<echo=TRUE>>=
 tableTranscript.id(enpa)
@@ -338,9 +338,9 @@ gpu <- getGenePositions(uc)
 gpu
 @
 %
-There is a slight difference between both results: 
+There is a slight difference between both results:
 The last column is \code{gene\_id} for \Rclass{ensemblGenome} and
-\code{clusterID} for \Rclass{ucscGenome}. 
+\code{clusterID} for \Rclass{ucscGenome}.
 This is due to different information which is available for each.
 
 
@@ -353,7 +353,7 @@ This is due to different information which is available for each.
 \subsection{Extract exon based table}
 
 Exon based view on annotation data can be obtained with \rfc{ensemblExons}
-which returns an object of class \rcl{ensemblExons}. 
+which returns an object of class \rcl{ensemblExons}.
 Basically \rfc{ensemblExons} calls \rfc{extractFeature} for feature type "exon".
 Information about presence of cds start or end and start-codon or stop-codon
 is added.
@@ -371,15 +371,15 @@ enex
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
 \subsection{Extract splice-junction based views from \rcl{ensemblExons}}
 
-From \rcl{ensemblExons} information about adjacency of exons (which defines 
+From \rcl{ensemblExons} information about adjacency of exons (which defines
 annotated splice-sites) can be obtained by putting exons with equal
 transcript\_id and subsequent exon\_number side by side.\\
 %
-The start and end positions of adjacent exons are renamed to lstart, lend 
+The start and end positions of adjacent exons are renamed to lstart, lend
 and rstart and rend.
 The "l" prefix refers to the exon with lower start and end coordinates
-(i.e. left, lower exon\_number). 
-The "r" prefix refers to the exons with higher start and end coordinates 
+(i.e. left, lower exon\_number).
+The "r" prefix refers to the exons with higher start and end coordinates
 (i.e. right, higher exon\_number).\\
 %
 Setting \robj{coding=TRUE} will restrict the result to exons for which
@@ -405,7 +405,7 @@ which identifies each seqid, left-end, right-start combination uniquely.
 \rfc{unifyJuncs} also adds a new \robj{ujs} table inside the contained
 environment.\\
 %
-\rfc{getUnifiedJuncs} takes the result of \rfc{unifyJuncs} and adds 
+\rfc{getUnifiedJuncs} takes the result of \rfc{unifyJuncs} and adds
 gene\_name and strand information.
 %
 <<>>=
@@ -417,10 +417,10 @@ ujens
 jug
 @
 %
-The result tables of \rfc{unifyJuncs} and \rfc{getGenePositions} are stored 
-inside the internal environment of \rcl{ensemblJunctions}. 
+The result tables of \rfc{unifyJuncs} and \rfc{getGenePositions} are stored
+inside the internal environment of \rcl{ensemblJunctions}.
 From there, the results can easily be reproduced without recalculation.
-The tables are automatically included in \rfc{saveGenome} and 
+The tables are automatically included in \rfc{saveGenome} and
 \rfc{load.ensembl.juncs} mechanisms.
 
 
@@ -428,15 +428,15 @@ The tables are automatically included in \rfc{saveGenome} and
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
 \section{Overlapping}
 
-The overlap function is used to supply annotation for genomic ranges. 
+The overlap function is used to supply annotation for genomic ranges.
 The function takes two \rcl{data.frame}'s which contain query (qry) and
-reference (ref) ranges respectively. 
+reference (ref) ranges respectively.
 Each dataset will be identified by it's id.\\
 \newline
 %
 The routine assumes that query and reference tables are ascending sorted by
 column 'start'.
-Otherwise the result will be incorrect (i.e. missing hits). 
+Otherwise the result will be incorrect (i.e. missing hits).
 The function assumes that there is no overlap between reference ranges.
 It will otherwise return only one, possibly arbitrary, hit per query range.\\
 \newline
@@ -469,13 +469,13 @@ The overlap encodings are explained as follows:
 \end{itemize}
 %
 The added "leftDiff" and "rightDiff" columns contain the distance between
-the query and reference range boundaries: 
+the query and reference range boundaries:
 leftDiff is the difference between the left (lower coordinate) margins and
 rightDiff is the difference between the right (higher coordinate) margins.
 
 \subsection{Overlapping for splice-junctions}
 
-The \rfc{overlapJuncs} function is specialized for annotation of 
+The \rfc{overlapJuncs} function is specialized for annotation of
 splice events in BAM alignment data.
 The function takes two arguments: a \rcl{data.frame} providing query
 data and a \rcl{refJunctions} object providing annotation data.
@@ -484,15 +484,15 @@ data and a \rcl{refJunctions} object providing annotation data.
 \subsubsection{Query data}
 
 Query data for \rfc{overlapJuncs} are BAM alignment gap-sites.
-These gap-sites are defined by one or multiplle gapped alignments of RNA-seq 
-reads to a reference genome. 
+These gap-sites are defined by one or multiplle gapped alignments of RNA-seq
+reads to a reference genome.
 Due to the splicing process, a variable fraction of the reads align in
 two or more fractions to the reference genome.
 Two adjacent alignment fractions define the position of a gap-site.\\
 %
-The position of the alignment fractions are named \textbf{lstart} and 
-\textbf{lend} for the left (i.e. lower genomic coordinates) alignment 
-interval and \textbf{rstart} and \textbf{rend} for the right 
+The position of the alignment fractions are named \textbf{lstart} and
+\textbf{lend} for the left (i.e. lower genomic coordinates) alignment
+interval and \textbf{rstart} and \textbf{rend} for the right
 (i.e. higher genomic coordinates) alignment interval.\\
 %
 The two genomic intervals of a gap-site implicitly define a third interval:
@@ -502,7 +502,7 @@ The biological meaning of gap-sites is that alignment gaps correspond to
 introns and the left and right align regions correspond to adjacent
 exon boundaries.\\
 %
-Due to the fact that gapped alignments do not cover whole exons, 
+Due to the fact that gapped alignments do not cover whole exons,
 the inner boundaries of gap-sites are biological meaningful and the
 outer boundaries of gap-sites usually are technical artifacts.\\
 %
@@ -513,7 +513,7 @@ any overlap with annotated splice-sites is present.\\
 \paragraph{The query data.frame} defines one gap-site in each row.
 Therefore the table is expected to contain the following columns:
 \begin{itemize}
-    \item \textbf{id}: Consecutive (unique) integral values. 
+    \item \textbf{id}: Consecutive (unique) integral values.
     \item \textbf{seqid}: Character values for reference sequence
         itentifiers (e.g. 'chr1' or '1').
     \item \textbf{lstart}: Position of first nucleotide of left
@@ -558,7 +558,7 @@ junc <- getSpliceTable(ens)
 
 \subsubsection{Overlapping results}
 
-Junction based annotation of annotation gap-sites is done by the 
+Junction based annotation of annotation gap-sites is done by the
 \rfc{overlapJuncs} function.
 <<>>=
 res <- overlapJuncs(qry, junc)
@@ -584,8 +584,8 @@ The result table provides gene\_id, transcript\_id, gene\_name and strand.
 
 
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
-%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
 \section{Workflows}
+%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
 
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
 \subsection{Establish a standard set of refGenome objects for Ensembl}
@@ -628,5 +628,109 @@ saveGenome(enjc76, "enjc76.RData")
 # + + + + + + + + + + + + + + + + + + + + + + + + #
 # enju76 <- unifyJuncs(enjc76)
 @
+
+
+%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
+\section{Gene model}
+%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %%
+
+Genomic annotation data expands into a complex variety of qualities
+for each gene. The \rcl{geneModel} and \rcl{transcriptModel} classes
+capture qualities for single genes and transcripts.
+
+
+\subsection{geneModel objects}
+
+Gene model objects contain collected data for one single gene
+for example gene-name, gene-id and strand as well as tables with
+coordinates for single exons and a list of transcript objects.
+
+<<>>=
+ensfile<-system.file("extdata",
+    "hs.ensembl.62.small.RData", package="refGenome")
+ens<-loadGenome(ensfile)
+
+gt <- getGeneTable(ens)
+gene_id <- as.character(gt$gene_id[1])
+gm <- geneModel(ens, gene_id)
+@
+
+<<fig=TRUE>>=
+plot(gm)
+@
+
+Further exploration of exons can be done using \rcl{transcriptModel}
+objects which is the appropriate method when a gene consists
+of many transcripts or many exons.
+
+\subsection{transcriptModel object}
+
+Objects of class \rcl{transcriptModel} contain data on single transcripts
+like gene-id, gene-name, strand or coordinates.
+
+Transcript objects can be extracted from \rcl{geneModel} objects
+by name and by index which is the usual way to create
+\rcl{transcriptModel} objects.
+
+\subsubsection{Extraction by index}
+<<>>=
+tr <- getTranscript(gm, 1)
+tr
+@
+
+\subsubsection{Extraction by ID}
+<<>>=
+tr <- getTranscript(gm, "ENST00000450305")
+tr
+@
+
+From a \rcl{transcriptModel} object, exon and CDS tables can be extracted.
+
+<<>>=
+getExonData(tr)
+@
+
+
+<<>>=
+getCdsData(tr)
+@
+
+
+\section{Gene model objects}
+
+\subsection{Gene model}
+
+Gene model objects organize data for single genes.
+The Gene model objects are created using gene-id's from \rcl{refGenome}
+objects as shown below.
+
+<<>>=
+ensfile<-system.file("extdata",
+    "hs_en82_grch38_small.gtf", package="refGenome")
+
+en82s <- ensemblGenome()
+basedir(en82s) <- dirname(ensfile)
+read.gtf(en82s, "hs_en82_grch38_small.gtf")
+gt <- getGeneTable(en82s)
+@
+
+
+<<>>=
+gm <- geneModel(en82s, "ENSG00000227232")
+@
+
+Upon 'interior=FALSE' in \rfc{geneModel} function internal gene structure
+elements (exons, transcripts) are not extracted.
+
+\subsection{Transcript model}
+
+Transcipt model objects contain data for a single transcript.
+They are intended for use inside \rcl{geneModel} objects.
+
+<<>>=
+tr <- getTranscript(gm, 1)
+tr
+@
+
 
 \end{document}
