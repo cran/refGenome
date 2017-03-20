@@ -297,7 +297,7 @@ gm <- geneModel(en82s, "ENSG00000227232")
 
 
 ###################################################
-### code chunk number 33: refGenome.Rnw:727-729
+### code chunk number 33: refGenome.Rnw:730-732
 ###################################################
 tr <- getTranscript(gm, 1)
 tr

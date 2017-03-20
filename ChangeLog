@@ -65,6 +65,7 @@ Changelog :
                 (i.e. same class as passed object).
 24.02.16  :     Added extractByGeneId function.
 13.05.16  :     Added new classes: geneModel and geneList
+12.10.16  :		Changed file extensions: *.r to *.R
 
 ## + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
 ## END OF FILE

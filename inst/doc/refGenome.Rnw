@@ -719,6 +719,9 @@ gt <- getGeneTable(en82s)
 gm <- geneModel(en82s, "ENSG00000227232")
 @
 
+Upon 'interior=FALSE' in \rfc{geneModel} function internal gene structure
+elements (exons, transcripts) are not extracted.
+
 \subsection{Transcript model}
 
 Transcipt model objects contain data for a single transcript.

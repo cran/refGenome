@@ -1,4 +1,4 @@
-useDynLib(refGenome)
+useDynLib(refGenome, .registration = TRUE, .fixes = "C_")
 ## utils: for "head" and "tail" generics
 import(methods)
 import(utils)

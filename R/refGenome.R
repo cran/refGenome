@@ -347,7 +347,7 @@ setMethod("read.gtf", "refGenome",
         basename(filename), "'.\n", sep="")
 
     param <- c(path.expand(filename), comment.char[1], sep)
-    tbl <- .Call("read_gtf", param, progress, PACKAGE="refGenome")
+    tbl <- .Call(C_read_gtf, param, progress, PACKAGE="refGenome")
 
     ## + + + + + + + + + + + + + + + + + + + + + + + + + + + ##
     ## Ensembl 76 has introduced 'gene' feature type:
@@ -934,7 +934,7 @@ setMethod("tableFeatures", "ucscGenome", function(object)
 {return(table(object@ev$gtf$feature))})
 
 
-setMethod("extractFeature", c("refGenome", "character"), 
+setMethod("extractFeature", c("refGenome", "character"),
     function(object, feature="exon")
 {
     if(!exists("gtf", where=object@ev, inherits=FALSE))
@@ -1278,7 +1278,7 @@ setMethod("addExonNumber", "refGenome", function(object)
 
     dfr <- dfr[order(dfr$tr, dfr$sq, dfr$st, dfr$en), ]
 
-    res <- .Call("get_exon_number", dfr$tr, dfr$sq, dfr$st,
+    res <- .Call(C_get_exon_number, dfr$tr, dfr$sq, dfr$st,
                                             dfr$en, PACKAGE = "refGenome")
 
     mtc <- match(dfr$id,object@ev$gtf$id)
@@ -1398,7 +1398,7 @@ setGeneric("unifyRanges", function(object) standardGeneric("unifyRanges"))
 setMethod("unifyRanges", "refExons", function(object){
 
     ex <- object@ev$gtf
-    uex <- .Call("unify_genomic_ranges",
+    uex <- .Call(C_unify_genomic_ranges,
                     ex$id, ex$seqid, ex$start, ex$end, PACKAGE="refGenome")
 
 
@@ -1463,11 +1463,11 @@ setMethod("getSpliceTable", "refGenome", function(object)
         gtf <- object@ev$gtf
     else
         gtf <- object@ev$gtf[object@ev$gtf$feature=="exon", ]
-    
-    
+
+
     if(nrow(gtf)<2)
         stop("At least 2 exons needed for splice table!")
-    
+
     # Shape and sort input values
     gtf <- gtf[!is.na(gtf$transcript_id), ]
     dfr <- data.frame(tr=as.integer(factor(gtf$transcript_id)),
@@ -1481,7 +1481,7 @@ setMethod("getSpliceTable", "refGenome", function(object)
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
     # Junction assembly in C
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
-    res  <-  .Call("get_splice_juncs",  dfr$tr,  dfr$id,  dfr$st,
+    res  <-  .Call(C_get_splice_juncs,  dfr$tr,  dfr$id,  dfr$st,
                                                 dfr$en, PACKAGE="refGenome")
 
 
@@ -1562,7 +1562,7 @@ setMethod("unifyJuncs", "refJunctions", function(object){
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
     # Junction unifications in C
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
-    ujc <- .Call("unify_splice_juncs", dfr$seqid, dfr$lstart, dfr$lend,
+    ujc <- .Call(C_unify_splice_juncs, dfr$seqid, dfr$lstart, dfr$lend,
                 dfr$rstart, dfr$rend,
                 dfr$id, dfr$gene_id, dfr$strand, dfr$nnmd, PACKAGE="refGenome")
 
@@ -1744,7 +1744,7 @@ setMethod("addIsCoding", "ensemblJunctions", function(object, ens)
 
 overlap <- function(qry, ref)
 {
-    res <- .Call("overlap_ranges", as.integer(qry$id), as.integer(qry$start),
+    res <- .Call(C_overlap_ranges, as.integer(qry$id), as.integer(qry$start),
                 as.integer(qry$end), as.integer(ref$id), as.integer(ref$start),
                 as.integer(ref$end), PACKAGE = "refGenome")
   return(res)
@@ -1896,10 +1896,10 @@ overlapJuncs <- function(qry, junc)
                 format(nq, width = 7, big.mark = bm),
                 "\tref set:", format(nr, width = 6, big.mark = bm))
 
-        rfs$rMaxRend <-.Call("get_cum_max", rfs$rend, PACKAGE = "refGenome")
+        rfs$rMaxRend <-.Call(C_get_cum_max, rfs$rend, PACKAGE = "refGenome")
         if(nq > 0 & nr > 0)
         {
-            l[[k]] <- .Call("gap_overlap", qrs$id, qrs$lstart, qrs$lend,
+            l[[k]] <- .Call(C_gap_overlap, qrs$id, qrs$lstart, qrs$lend,
                         qrs$rstart, qrs$rend,
                         rfs$id, rfs$lstart, rfs$lend,
                         rfs$rstart, rfs$rend,
