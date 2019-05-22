@@ -16,7 +16,7 @@ unifyJuncs(object)
   \item{object}{\code{refJunctions} object. Contains splice-junction data.}
 }
 \details{
-Many splices sites are multiple times contained when calculated from 
+Many splices sites are multiple times contained when calculated from
 transcripts.
 In order to obtain unique splice positions the function extracts one data
 set per (seqid, lend, rstart) combination.
@@ -38,7 +38,7 @@ The contained gtf - data.frame contains the following columns:
     lend \tab left end\cr
     rstart \tab right start\cr
     rend \tab right end \cr
-    nSites \tab Number of \code{refJunctions} (transcripts) 
+    nSites \tab Number of \code{refJunctions} (transcripts)
         that contain this site.\cr
     %
     gene_id \tab Gene identifier.\cr
@@ -52,23 +52,27 @@ The contained gtf - data.frame contains the following columns:
 Wolfgang Kaisers
 }
 \examples{
-# + + + + + + + + + + + + + + + + + + + #
-# A) Ensembl
-# + + + + + + + + + + + + + + + + + + + #
-ef<-system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
-ens<-loadGenome(ef)
-enj<-getSpliceTable(ens)
-ufe<-unifyJuncs(enj)
-saveGenome(enj,"enj.RData",useBasedir=FALSE)
-enjr<-loadGenome("enj.RData")
-# + + + + + + + + + + + + + + + + + + + #
-# B) UCSC
-# + + + + + + + + + + + + + + + + + + + #
-uf<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-loadGenome(uf)
-ucj<-getSpliceTable(uc)
-ufu<-unifyJuncs(ucj)
-saveGenome(ucj,"ucj.RData",useBasedir=FALSE)
-ucjr<-loadGenome("ucj.RData")
+##-------------------------------------##
+## A) Ensembl
+##-------------------------------------##
+ef <- system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
+ens <- loadGenome(ef)
+enj <- getSpliceTable(ens)
+ufe <- unifyJuncs(enj)
+\donttest{
+saveGenome(enj, "enj.RData", useBasedir=FALSE)
+enjr <- loadGenome("enj.RData")
+}
+##-------------------------------------##
+## B) UCSC
+##-------------------------------------##
+uf <- system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
+uc <- loadGenome(uf)
+ucj <- getSpliceTable(uc)
+ufu <- unifyJuncs(ucj)
+\donttest{
+saveGenome(ucj, "ucj.RData", useBasedir=FALSE)
+ucjr <- loadGenome("ucj.RData")
+}
 }
 \keyword{refJunctions}

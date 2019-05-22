@@ -95,22 +95,22 @@ geneModel(object, gene_id, interior=TRUE)
 Wolfgang Kaisers
 }
 \examples{
-# + + + + + + + + + + + + + + + + + + #
-# A) Ensembl
-# + + + + + + + + + + + + + + + + + + #
-ensfile<-system.file("extdata",
+##-------------------------------------##
+## A) Ensembl
+##-------------------------------------##
+ensfile <- system.file("extdata",
                         "hs.ensembl.62.small.RData", package="refGenome")
-ens<-loadGenome(ensfile)
+ens <- loadGenome(ensfile)
 
 gt <- getGeneTable(ens)
 gene_id <- as.character(gt$gene_id[1])
 gm <- geneModel(ens, gene_id, interior=TRUE)
 
-# + + + + + + + + + + + + + + + + + + #
-# B) UCSC
-# + + + + + + + + + + + + + + + + + + #
-ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-loadGenome(ucfile)
+##-------------------------------------##
+## B) UCSC
+##-------------------------------------##
+ucfile <- system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
+uc <- loadGenome(ucfile)
 gt <- getGeneTable(uc)
 gene_id <- as.character(gt$gene_id[1])
 gm <- geneModel(uc, gene_id)

@@ -74,12 +74,12 @@ geneList(ref, genes, interior=TRUE)
 Wolfgang Kaisers
 }
 \examples{
-# + + + + + + + + + + + + + + + + + + #
-# A) Ensembl
-# + + + + + + + + + + + + + + + + + + #
-ensfile<-system.file("extdata",
+##-------------------------------------##
+## A) Ensembl
+##-------------------------------------##
+ensfile <- system.file("extdata",
                         "hs.ensembl.62.small.RData", package="refGenome")
-ens<-loadGenome(ensfile)
+ens <-loadGenome(ensfile)
 gt <- getGeneTable(ens)
 gl <- geneList(ens, gt$gene_id, interior=TRUE)
 names(gl)

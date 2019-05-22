@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{Using refGenome package}
+%\VignetteIndexEntry{readGTF}
 %\VignettePackage{refGenome}
 \documentclass[a4paper]{article}
 
@@ -92,12 +92,12 @@ function. \rfc{read.gtf} calls \rfc{read\_gtf} via \rfc{.Call}.
 
 \section{C Interface}
 
-The source of \rfc{read\_gtf} is located in refGenome.cpp. Inside 
+The source of \rfc{read\_gtf} is located in refGenome.cpp. Inside
 \rfc{read\_gtf} a
 \robj{gtf::gtf\_file} C++ object is created which
 performs line wise parsing.
 
-The obtained result is then copied into a \rcl{data.frame}. The R 
+The obtained result is then copied into a \rcl{data.frame}. The R
 interface to \rcl{data.frame} is encapsulated in a \rcl{data\_frame} C++
 object.
 
@@ -129,10 +129,10 @@ The last column is extracted using the \robj{gtf\_attribute} class.
 
 Because the GTF format definition does not include number or type of attributes,
 a parsing algorithm needs to keep an unkown number of values of an unkown
-number of types. Each data record (line) is identified by a unique integral 
+number of types. Each data record (line) is identified by a unique integral
 id.
 
-The decision here was to use hash table implemented by std::unordered\_map 
+The decision here was to use hash table implemented by std::unordered\_map
 (included by <unordered\_map>).
 The map uses the attribute type as key value. Therefore only a small number of
 keys exist.
@@ -140,14 +140,14 @@ Each map element consists of a list of id / value pairs. A GTF attribute is
 added by pushing back the id / value pair to the list residing as map-element
 in the unordered\_map.
 
-The values are retrieved by iteration through the unordered\_map. Each map 
-element defines a new column in the returned \robj{data.frame}. The 
+The values are retrieved by iteration through the unordered\_map. Each map
+element defines a new column in the returned \robj{data.frame}. The
 stored id values serve as row indices.
 
 \paragraph{An alternative} implementation would have been a linked list
 containing id, type, value triples which could have been passed back to R
 inside a data.frame with tree columns.
-Further separation could then be done by sequentially 
+Further separation could then be done by sequentially
 extraction of items for all present types inside R.
 
 \section{C++ interface for R types}
@@ -178,7 +178,7 @@ The exptr class is designed for usage of external C or C++ pointers.
 Inside R, external pointers are accessed via EXTPTRSXP types. In order
 to prevent memory leaks, a finalizer routine needs to be registered.
 
-The extptr class internally uses shared\_ptr objects (defined in 
+The extptr class internally uses shared\_ptr objects (defined in
 <memory> header.)
 
 The following example shows how extptr objects can be used.
@@ -219,13 +219,13 @@ A simple example shows how atmptr objects can be used.
 SEXP square(SEXP pArg)
 {
     atmptr<int> arg(pArg);
-    
+
     int i, n = length(arg);
     atmptr<int> pRes(n);
-    
+
     for(i=0; i < n; ++i)
         pRes[i] = arg[i]^2;
-        
+
     return pRes;
 }
 \end{verbatim}
@@ -248,7 +248,7 @@ SEXP get_str()
 
     for(i=0; i < n; ++i)
         res.set(i, v[i]);
-        
+
     return res;
 }
 \end{verbatim}
@@ -266,18 +266,18 @@ SEXP create_data_frame()
 {
     int nrow = 3, ncol=4;
     data_frame dfr(nrow, ncol);
-    
+
     // Add ID - column ("id")
     dfr.addIdColumn();
-    
+
     atmptr<char> type(nrow);
     // fill types ....
     dfr.addColumn(type, "type");
-    
+
     atmptr<int> values(nrow);
     // fill values ...
     dfr.addColumn(values, "value")
-    
+
     return dfr;
 }
 \end{verbatim}

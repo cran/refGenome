@@ -41,26 +41,26 @@ Present \code{genes} tables will be automatically saved and restored by
 \code{saveGenome} and \code{load.X} functions.}
 \author{Wolfgang Kaisers}
 \examples{
-# + + + + + + + + + + + + + + + + + + #
-# A) Ensembl genome:
-# + + + + + + + + + + + + + + + + + + #
-ensfile<-system.file("extdata", 
+##-------------------------------------##
+## A) Ensembl genome:
+##-------------------------------------##
+ensfile <- system.file("extdata",
                         "hs.ensembl.62.small.RData", package="refGenome")
-ens<-loadGenome(ensfile)
-gp<-getGenePositions(ens)
+ens <- loadGenome(ensfile)
+gp <- getGenePositions(ens)
 
-# + + + + + + + + + + + + + + + + + + #
-# B) Ensembl junctions:
-# + + + + + + + + + + + + + + + + + + #
-junc<-getSpliceTable(ens)
-genes<-getGenePositions(junc)
+##-------------------------------------##
+## B) Ensembl junctions:
+##-------------------------------------##
+junc <- getSpliceTable(ens)
+genes <- getGenePositions(junc)
 
-# + + + + + + + + + + + + + + + + + + #
+##-------------------------------------##
 # C) Ucsc genome:
-# + + + + + + + + + + + + + + + + + + #
-ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-loadGenome(ucfile)
-junc<-getSpliceTable(uc)
-gp<-getGenePositions(junc)
+##-------------------------------------##
+ucfile <- system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
+uc <- loadGenome(ucfile)
+junc <- getSpliceTable(uc)
+gp <- getGenePositions(junc)
 }
 \keyword{overlap}

@@ -23,10 +23,10 @@ getGeneId(object, geneName)
 \value{character}
 \author{Wolfgang Kaisers}
 \examples{
-# + + + + + + + + + + + + + + + + + + #
-# A) Ensembl genome:
-# + + + + + + + + + + + + + + + + + + #
-ensfile<-system.file("extdata", 
+##-------------------------------------##
+## A) Ensembl genome:
+##-------------------------------------##
+ensfile<-system.file("extdata",
                         "hs.ensembl.62.small.RData", package="refGenome")
 ens<-loadGenome(ensfile)
 getGeneId(ens, c("DDX11L1", "WASH7P"))

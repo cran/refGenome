@@ -29,14 +29,14 @@ to import data is to download a "gtf" file from the UCSC Genome Browser
 Then import the data via the \code{read.gtf} function.
 }
 \section{Objects from the Class}{
-Objects can be created by calls of the form \code{ucscGenome()}. 
+Objects can be created by calls of the form \code{ucscGenome()}.
 }
 \section{Slots}{
   \describe{
     \item{\code{basedir}:}{Object of class \code{"character"}
         Directory where SQLite database is written.  }
     %
-    \item{\code{ev}:}{Object of class \code{"environment"} 
+    \item{\code{ev}:}{Object of class \code{"environment"}
         Environment that contains data structures. Optionally, there are gtf,
         attr and additionally xref data.frames. }
     %
@@ -47,10 +47,10 @@ Objects can be created by calls of the form \code{ucscGenome()}.
         \item{show}{\code{signature(object = "refGenome")}:
             Creates a sensible printout. }
         %
-        \item{getGtf}{\code{signature(object = "refGenome")}: 
+        \item{getGtf}{\code{signature(object = "refGenome")}:
             Returns content of gtf table. }
         %
-        \item{setGtf}{\code{signature(object = "refGenome")}: 
+        \item{setGtf}{\code{signature(object = "refGenome")}:
             Writes content of gtf table. }
         %
         \item{getAttr}{\code{signature(object = "refGenome")}:
@@ -60,8 +60,8 @@ Objects can be created by calls of the form \code{ucscGenome()}.
             Writes content of attribute table. }
         %
         \item{read.gtf}{\code{signature(object, filename="transcripts.gtf",
-            sep = "\t", useBasedir=TRUE, comment.char = "#", 
-            progress=100000L, ...)}: 
+            sep = "\t", useBasedir=TRUE, comment.char = "#",
+            progress=100000L, ...)}:
             Imports content of gtf file.
             This is the basic mechanism for data import.
             It works the same way for ucscGenome and for ensemblGenome.}
@@ -72,8 +72,8 @@ Objects can be created by calls of the form \code{ucscGenome()}.
             Imports UCSC 'knownToEnsembl' table. It's appended to the gtf
             table.}
         %
-        \item{addIsoforms}{\code{signature(object = "ucscGenome")}: 
-            Imports UCSC ' knownIsoforms' table. It's appendet to the gtf 
+        \item{addIsoforms}{\code{signature(object = "ucscGenome")}:
+            Imports UCSC ' knownIsoforms' table. It's appendet to the gtf
             table.}
         %
         \item{addXref}{\code{signature(object = "ucscGenome")}:
@@ -81,21 +81,21 @@ Objects can be created by calls of the form \code{ucscGenome()}.
             gtf table. The rest is written into xref table. }
         %
         \item{extractByGeneName}{\code{signature(object="ucscGenome",
-            geneNames="character")}: 
+            geneNames="character")}:
             Extracts ucscGenome object which contains table subsets.
             When none of the \code{geneNames} matches, the function returns
             \code{NULL}.}
         %
         \item{getXref}{\code{signature(object = "ucscGenome")}:
             Returns content of xref table. }
-            
+
         \item{getGenePositions}{\code{signature(object="ucscGenome",
-            by="character", force="logical")}: 
+            by="character", force="logical")}:
             Extracts table with position data for whole genes (smallest exon
             start position and largest exon end position.
             A copy of the table will be placed inside the internal environment.
-            Upon subsequent call only a copy of the contained table is returned 
-            unless \code{force=TRUE} is given. 
+            Upon subsequent call only a copy of the contained table is returned
+            unless \code{force=TRUE} is given.
             Upon \code{force=TRUE} new gene positions are calculated
             regardless of existing tables.)}
         %
@@ -111,7 +111,7 @@ Objects can be created by calls of the form \code{ucscGenome()}.
         \item{tableFeatures}{\code{signature(object="ucscGenome")}:
             Tables content of "feature" column.}
         %
-        \item{tableTranscript.id}{\code{signature(object="ucscGenome")}: 
+        \item{tableTranscript.id}{\code{signature(object="ucscGenome")}:
             Tables values in transcript_id column.}
         %
         \item{extractTranscript}{\code{signature(object="ucscGenome",
@@ -124,40 +124,43 @@ Objects can be created by calls of the form \code{ucscGenome()}.
 \references{http://genome.ucsc.edu/}
 \author{Wolfgang Kaisers}
 \examples{
-# + + + + + + + + + + + + + + + + + + + #
-# Loading and saving
-# From and to R-image (fast loading)
-# + + + + + + + + + + + + + + + + + + + #
-ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-loadGenome(ucfile)
+##-------------------------------------##
+## Loading and saving
+## From and to R-image (fast loading)
+##-------------------------------------##
+ucfile <- system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
+uc <- loadGenome(ucfile)
 uc
-saveGenome(uc,"uc.RData",useBasedir=FALSE)
-ucr<-loadGenome("uc.RData")
-
-# + + + + + + + + + + + + + + + + + + + # 
-# Extract data for Primary Assembly seqids
-# + + + + + + + + + + + + + + + + + + + #
-ucpa<-extractSeqids(uc,ucPrimAssembly())
+\donttest{
+saveGenome(uc, "uc.RData", useBasedir=FALSE)
+ucr <- loadGenome("uc.RData")
+}
+##-------------------------------------##
+## Extract data for Primary Assembly seqids
+##-------------------------------------##
+ucpa <-extractSeqids(uc, ucPrimAssembly())
 # Extract data for indival Genes
-ddx<-extractByGeneName(uc,"DDX11L1")
+ddx <- extractByGeneName(uc,"DDX11L1")
 ddx
 # Extract range limits of entire Genes
-gp<-getGenePositions(uc)
+gp <-getGenePositions(uc)
 gp
 tableFeatures(uc)
-extractByGeneName(ucpa,"DDX11L1")
+extractByGeneName(ucpa, "DDX11L1")
 tableTranscript.id(ucpa)
 
-# + + + + + + + + + + + + + + + + + + + #
-# Create object from scratch
-# + + + + + + + + + + + + + + + + + + + #
-# uc<-ucscGenome()
-# basedir(uc)<-"/my/genome/basedir"
+##-------------------------------------##
+## Create object from scratch
+##-------------------------------------##
+\donttest{
+uc<-ucscGenome()
+basedir(uc) <- "/my/genome/basedir"
 # Place all UCSC-files in folder
-# read.gtf(uc,"knownGene.gtf")
-# addXref(uc,"kgXref.csv")
-# addEnsembl(uc,"knownToEnsembl.csv")
-# addIsoforms(uc,"knownisoforms.csv")
-# + + + + + + + + + + + + + + + + + + + #
+read.gtf(uc, "knownGene.gtf")
+addXref(uc, "kgXref.csv")
+addEnsembl(uc, "knownToEnsembl.csv")
+addIsoforms(uc, "knownisoforms.csv")
+}
+##-------------------------------------##
 }
 \keyword{classes}

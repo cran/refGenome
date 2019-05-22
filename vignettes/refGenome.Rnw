@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{The refGenome package}
+%\VignetteIndexEntry{Introduction}
 %\VignettePackage{refGenome}
 \documentclass[a4paper]{article}
 

@@ -86,12 +86,12 @@ Objects can be created by calls of the form
 Wolfgang Kaisers
 }
 \examples{
-# + + + + + + + + + + + + + + + + + + #
-# A) Ensembl
-# + + + + + + + + + + + + + + + + + + #
-ensfile<-system.file("extdata",
+##-------------------------------------##
+## A) Ensembl
+##-------------------------------------##
+ensfile <- system.file("extdata",
                         "hs.ensembl.62.small.RData", package="refGenome")
-ens<-loadGenome(ensfile)
+ens <- loadGenome(ensfile)
 
 gt <- getGeneTable(ens)
 gene_id <- as.character(gt$gene_id[1])
@@ -100,11 +100,11 @@ tr <- getTranscript(gm, 1)
 tr
 getExonData(tr)
 getCdsData(tr)
-# + + + + + + + + + + + + + + + + + + #
-# B) UCSC
-# + + + + + + + + + + + + + + + + + + #
-ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-loadGenome(ucfile)
+##-------------------------------------##
+## B) UCSC
+##-------------------------------------##
+ucfile <- system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
+uc <- loadGenome(ucfile)
 gt <- getGeneTable(uc)
 gene_id <- as.character(gt$gene_id[1])
 gm <- geneModel(uc, gene_id)

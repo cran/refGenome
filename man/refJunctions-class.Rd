@@ -12,7 +12,7 @@
 \alias{getSpliceTable,refGenome-method}
 \title{Class \code{"refJunctions"}}
 \description{
-refJunctions represents ensembl genomic annotation data for splice-junctions. 
+refJunctions represents ensembl genomic annotation data for splice-junctions.
 }
 \section{Objects from the Class}{
 Objects can be created by calls of the form getSpliceTable(rg) where 'rg' is
@@ -23,11 +23,11 @@ an object of class \code{refGenome} (ensemblGenome or ucscGenome).
     \item{\code{basedir}:}{Object of class \code{"character"}
         Directory where SQLite database is written.}
     %
-    \item{\code{ev}:}{Object of class \code{"environment"} 
+    \item{\code{ev}:}{Object of class \code{"environment"}
         Environment that contains data structures.
         The splice-junction data is stored in 'gtf' named data.frame inside ev.
-        Optionally the environment also contains the result tables from 
-        \code{unifyJuncs} or \code{getGenePositions} functions. 
+        Optionally the environment also contains the result tables from
+        \code{unifyJuncs} or \code{getGenePositions} functions.
         They are automatically included in save and load procedures. }
     %
 }}
@@ -40,7 +40,7 @@ an object of class \code{refGenome} (ensemblGenome or ucscGenome).
             Adds uid to 'gtf' table and creates a new 'unique junction site'
             (ujs) table. }
         %
-        \item{getGenePositions}{\code{signature(object="refJunctions", 
+        \item{getGenePositions}{\code{signature(object="refJunctions",
             force="logical")}:
             Extracts table with position data for whole genes (smallest exon
             start position and largest exon end position.
@@ -63,24 +63,27 @@ http://mblab.wustl.edu/GTF22.html#fields
 Wolfgang Kaisers
 }
 \examples{
-# + + + + + + + + + + + + + + + + + + + #
-# A) Ensembl
-# + + + + + + + + + + + + + + + + + + + #
-ef<-system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
-ens<-loadGenome(ef)
-enj<-getSpliceTable(ens)
-ufe<-unifyJuncs(enj)
-saveGenome(enj,"enj.RData",useBasedir=FALSE)
-enjr<-loadGenome("enj.RData")
-
-# + + + + + + + + + + + + + + + + + + + #
-# B) UCSC
-# + + + + + + + + + + + + + + + + + + + #
-uf<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-loadGenome(uf)
-ucj<-getSpliceTable(uc)
-ufu<-unifyJuncs(ucj)
-saveGenome(ucj,"ucj.RData",useBasedir=FALSE)
-ucjr<-loadGenome("ucj.RData")
+##-------------------------------------##
+## A) Ensembl
+##-------------------------------------##
+ef <- system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
+ens <- loadGenome(ef)
+enj <- getSpliceTable(ens)
+ufe <- unifyJuncs(enj)
+\donttest{
+saveGenome(enj,"enj.RData", useBasedir=FALSE)
+enjr <- loadGenome("enj.RData")
+}
+##-------------------------------------##
+## B) UCSC
+##-------------------------------------##
+uf <- system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
+uc <- loadGenome(uf)
+ucj <- getSpliceTable(uc)
+ufu <- unifyJuncs(ucj)
+\donttest{
+saveGenome(ucj, "ucj.RData",useBasedir=FALSE)
+ucjr <- loadGenome("ucj.RData")
+}
 }
 \keyword{refJunctions}

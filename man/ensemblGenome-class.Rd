@@ -35,7 +35,7 @@ Objects can be created by calls of the form \code{ensemblGenome(dbfile)}.
 }
 \section{Slots}{
     \describe{
-        \item{\code{basedir}:}{Object of class \code{"character"} 
+        \item{\code{basedir}:}{Object of class \code{"character"}
                         Directory where SQLite database is written.}
         %
         \item{\code{ev}:}{Object of class \code{"environment"} Environment that
@@ -49,30 +49,30 @@ Objects can be created by calls of the form \code{ensemblGenome(dbfile)}.
         \item{show}{\code{signature(object = "refGenome")}:
             Creates a sensible printout.}
         %
-        \item{getGtf}{\code{signature(object = "refGenome")}: 
+        \item{getGtf}{\code{signature(object = "refGenome")}:
             Returns content of gtf table.}
         %
         \item{setGtf}{\code{signature(object = "refGenome")}:
             Writes content of gtf table.}
         %
-        \item{getAttr}{\code{signature(object = "refGenome")}: 
+        \item{getAttr}{\code{signature(object = "refGenome")}:
             Returns content of attribute table.}
         %
         \item{getGeneTable}{\code{signature(object = "refGenome")}:
-            Returns content of genes table when table exists. 
+            Returns content of genes table when table exists.
             Otherwise NULL is returned.}
         %
-        \item{setAttr}{\code{signature(object = "refGenome")}: 
+        \item{setAttr}{\code{signature(object = "refGenome")}:
             Writes content of attribute table.}
         %
-        \item{read.gtf}{\code{signature(object, filename="transcripts.gtf", 
+        \item{read.gtf}{\code{signature(object, filename="transcripts.gtf",
             sep = "\t", useBasedir=TRUE, comment.char = "#",
             progress=100000L, ...)}:
             Imports content of gtf file.
             This is the basic mechanism for data import. It works the
             same way for ucscGenome and for ensemblGenome.}
         %
-        \item{extractPaGenes}{\code{signature(object="ensemblGenome")}: 
+        \item{extractPaGenes}{\code{signature(object="ensemblGenome")}:
             Extracts all annotations on primary assembly. The function returns
             a data.frame. Used as shortcut to directly extract a table from gtf
             files.}
@@ -84,7 +84,7 @@ Objects can be created by calls of the form \code{ensemblGenome(dbfile)}.
         \item{extractByGeneName}{\code{signature(object="ensemblGenome",
             geneNames="character")}:
             Extracts ensemblGenome object which contains table subsets.
-            When none of the \code{geneNames} matches, 
+            When none of the \code{geneNames} matches,
             the function returns \code{NULL}.}
         %
         \item{extractTranscript}{\code{signature(object="ensemblGenome",
@@ -97,7 +97,7 @@ Objects can be created by calls of the form \code{ensemblGenome(dbfile)}.
             (smallest exon start position and largest exon end position. A copy
             of the table will be placed inside the internal environment. Upon
             subsequent call only a copy of the contained table is returned
-            unless \code{force=TRUE} is given. Upon \code{force=TRUE} new gene 
+            unless \code{force=TRUE} is given. Upon \code{force=TRUE} new gene
             positions are calculated regardless of existing tables.)}
         %
         \item{getGeneTable}{\code{signature(object="ucscGenome")}:
@@ -123,58 +123,61 @@ http://mblab.wustl.edu/GTF22.html#fields
 Wolfgang Kaisers
 }
 \examples{
-# + + + + + + + + + + + + + + + + + + + #
-# Create an instance from scratch
-# Real data:
-# ftp://ftp.ensembl.org/pub/release-80/gtf/homo_sapiens/Homo_sapiens.GRCh38.80.gtf.gz
-# + + + + + + + + + + + + + + + + + + #
-ens<-ensemblGenome()
-basedir(ens)<-system.file("extdata",package="refGenome")
-ens_gtf<-"hs.ensembl.62.small.gtf"
+##-------------------------------------##
+## Create an instance from scratch
+## Real data:
+## ftp://ftp.ensembl.org/pub/release-80/gtf/homo_sapiens/Homo_sapiens.GRCh38.80.gtf.gz
+##-------------------------------------##
+ens <- ensemblGenome()
+basedir(ens) <- system.file("extdata",package="refGenome")
+ens_gtf <- "hs.ensembl.62.small.gtf"
 read.gtf(ens,ens_gtf)
-# Loading of a saved genome:
-ensfile<-system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
-ens<-loadGenome(ensfile)
+# Load a previously saved genome:
+ensfile <- system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
+ens <- loadGenome(ensfile)
 
-# + + + + + + + + + + + + + + + + + + + # 
-# Saving and loading 
-# Save as R-image (fast loading)
-# + + + + + + + + + + + + + + + + + + #
-basedir(ens)<-getwd()
-saveGenome(ens,"hs.ensembl.62.small.RData",useBasedir=FALSE)
-enr<-loadGenome("hs.ensembl.62.small.RData")
+##-------------------------------------##
+## Saving and loading
+## Save as R-image (fast loading)
+##-------------------------------------##
+\donttest{
+basedir(ens) <- getwd()
+saveGenome(ens, "hs.ensembl.62.small.RData", useBasedir=FALSE)
+enr <- loadGenome("hs.ensembl.62.small.RData")
+}
 
-# Save as SQLite database
-# + + + + + + + + + + + + + + + + + + + #
-# Commented out because RSQlite 
-# seems to produce memory leaks
-# + + + + + + + + + + + + + + + + + + + #
-#writeDB(ens,filename="ens62.db3",useBasedir=FALSE)
-#edb<-loadGenomeDb(filename="ens62.db3")
+## Save as SQLite database
+##-------------------------------------##
+## Commented out because RSQlite
+## seems to produce memory leaks
+##-------------------------------------##
+\donttest{
+writeDB(ens, filename="ens62.db3", useBasedir=FALSE)
+edb <- loadGenomeDb(filename="ens62.db3")
+}
 
-# + + + + + + + + + + + + + + + + + + + # 
-# Extract data for Primary Assembly seqids
-# + + + + + + + + + + + + + + + + + + #
-enpa<-extractSeqids(ens,ensPrimAssembly())
+##-------------------------------------##
+##Extract data for Primary Assembly seqids
+##-------------------------------------##
+enpa <- extractSeqids(ens,ensPrimAssembly())
 # Tables all features in 'gtf' table
 tableFeatures(enpa)
 # Extract Coding sequences for Primary Assemblys
-enpafeat<-extractFeature(enpa,"exon")
-# Shortcut. Returns data.frame
-engen<-extractPaGenes(ens)
+enpafeat <- extractFeature(enpa, "exon")
+# Shortcut. Returns a data.frame
+engen <- extractPaGenes(ens)
 
-# + + + + + + + + + + + + + + + + + + + # 
-# Extract data for indival Genes
-# + + + + + + + + + + + + + + + + + + #
-ddx<-extractByGeneName(ens,"DDX11L1")
+##-------------------------------------##
+## Extract data for indival Genes
+##-------------------------------------##
+ddx <- extractByGeneName(ens, "DDX11L1")
 ddx
 tableTranscript.id(ddx)
 tableTranscript.name(ddx)
-fam<-extractTranscript(ens,"ENST00000417324")
+fam <- extractTranscript(ens, "ENST00000417324")
 fam
 # Extract range limits of entire Genes
-gp<-getGenePositions(ens)
+gp <- getGenePositions(ens)
 gp
-# + + + + + + + + + + + + + + + + + + + #
 }
 \keyword{classes}

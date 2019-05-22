@@ -2,7 +2,7 @@
 \alias{overlapJuncs}
 \title{overlapJuncs function}
 \description{
-Overlaps query gap-sites (from BAM alignment data) with annotated 
+Overlaps query gap-sites (from BAM alignment data) with annotated
 splice junctions (from reference genome annotation).
 }
 \usage{
@@ -11,17 +11,17 @@ overlapJuncs(qry, junc)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
     \item{qry}{\code{data.frame}.
-        Table with query ranges. 
-        qry should have columns 'id', 'seqid', 'lstart', 
+        Table with query ranges.
+        qry should have columns 'id', 'seqid', 'lstart',
         'lend', 'rstart', 'rend'.}
     %
-    \item{junc}{\code{refJunctions}. 
+    \item{junc}{\code{refJunctions}.
         Object which contains table of splice junctions in reference genome.}
     %
 }
 \details{
 The function finds optimal overlapping hits for alignment gap-sites in
-annotated splice-sites. 
+annotated splice-sites.
 A gap-site is the combination of two genomic regions (= exons) which enclose
 an intermediary (= intron).
 The function identifies junction records which overlap with the given
@@ -38,7 +38,7 @@ The function returns a data.frame
     %
     \item{refid}{\code{Integer}. Reference id from junctions object for best hit.}
     %
-    \item{ldiff}{\code{Integer}. Difference between lend values in qry and 
+    \item{ldiff}{\code{Integer}. Difference between lend values in qry and
         \code{junc} table for best hit (refid) record.}
     %
     \item{rdiff}{\code{Integer}. Difference between rstart values in qry
@@ -52,13 +52,13 @@ The function returns a data.frame
         \code{sod=0} when qry exactly hits an annotated site. \code{sod=NA}
         when no overlap has been found for query.}
     %
-    \item{first_refid}{\code{Integer}. 
+    \item{first_refid}{\code{Integer}.
         \code{id} for first overlapping record in \code{junc} table.}
     %
-    \item{last_refid}{\code{Integer}. 
+    \item{last_refid}{\code{Integer}.
         \code{id} for last overlapping record in \code{junc} table.}
     %
-    \item{nadv}{\code{Integer}. 
+    \item{nadv}{\code{Integer}.
         Number of advancing iterations during search for }
     %
     \item{strand}{Strand value derived from annotation.}
@@ -74,9 +74,9 @@ The function returns a data.frame
 Wolfgang Kaisers
 }
 \examples{
-# + + + + + + + + + + + + + + + + + + #
-# A) Example query  data
-# + + + + + + + + + + + + + + + + + + #
+##-------------------------------------##
+## A) Example query  data
+##-------------------------------------##
 ##                          1       2       3       4       5       6       7 ##
 qry <- data.frame(id = 1:7, seqid = "1",
             lstart = c(10100L, 11800L, 12220L, 12220L, 12220L, 32000L, 40000L),
@@ -85,18 +85,18 @@ qry <- data.frame(id = 1:7, seqid = "1",
             rend =   c(10300L, 12250L, 12179L, 12620L, 12700L, 32300L, 40300L))
 ##                          1       2       3       4       5       6       7 ##
 
-# + + + + + + + + + + + + + + + + + + #
-# B) Example reference data
-# + + + + + + + + + + + + + + + + + + #
+##-------------------------------------##
+## B) Example reference data
+##-------------------------------------##
 # B.1) Ensembl genome:
 ensfile <- system.file("extdata", "hs.ensembl.62.small.RData", package="refGenome")
 ens <- loadGenome(ensfile)
 gp <- getGenePositions(ens)
 # B.2) Ensembl junctions:
 junc <- getSpliceTable(ens)
-# + + + + + + + + + + + + + + + + + + #
-# C) Do overlap
-# + + + + + + + + + + + + + + + + + + #
+##-------------------------------------##
+## C) Do overlap
+##-------------------------------------##
 res <- overlapJuncs(qry, junc)
 }
 

@@ -10,7 +10,7 @@
 \alias{plotUbs,unifiedExons-method}
 %
 \title{Unification of Exonic ranges.}
-\description{Unified ranges are intended to be used as preparation of 
+\description{Unified ranges are intended to be used as preparation of
 exonic coordinates for counting of alignments (reads) inside these regions.
 In order to prevent ambiguities, overlaps between exons are removed.
 }
@@ -51,25 +51,27 @@ contains the following columns:
 Wolfgang Kaisers
 }
 \examples{
-# + + + + + + + + + + + + + + + + + + #
-# A) Ensembl
-# + + + + + + + + + + + + + + + + + + #
-ensfile<-system.file("extdata", 
+##-------------------------------------##
+## A) Ensembl
+##-------------------------------------##
+ensfile <- system.file("extdata",
                         "hs.ensembl.62.small.RData", package="refGenome")
-ens<-loadGenome(ensfile)
-enex<-refExons(ens)
+ens <- loadGenome(ensfile)
+enex <- refExons(ens)
+\donttest{
 saveGenome(enex,"enex.RData", useBasedir=FALSE)
-er<-loadGenome("enex.RData")
+er <- loadGenome("enex.RData")
+}
 # Unify exons
 uex <- unifyRanges(enex)
 plotUbs(uex, xlim=c(0,400), ylim=c(0,5))
 
-# + + + + + + + + + + + + + + + + + + #
-# B) UCSC
-# + + + + + + + + + + + + + + + + + + #
-ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-loadGenome(ucfile)
-ucex<-refExons(uc)
+##-------------------------------------##
+## B) UCSC
+##-------------------------------------##
+ucfile <- system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
+uc <- loadGenome(ucfile)
+ucex <- refExons(uc)
 # Unify exons
 uex <- unifyRanges(enex)
 plotUbs(uex, xlim=c(0,400), ylim=c(0,5))

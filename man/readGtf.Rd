@@ -20,7 +20,7 @@ file content and 'genes' containing data from 'gene' typed features.
 % Description
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %
 \usage{
-read.gtf(object, filename="transcripts.gtf", sep = "\t", 
+read.gtf(object, filename="transcripts.gtf", sep = "\t",
             useBasedir=TRUE, comment.char = "#", progress=100000L, ...)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -46,7 +46,7 @@ read.gtf(object, filename="transcripts.gtf", sep = "\t",
 \details{GTF is an extension of the GFF file format. GTF contains tabled data:
 Nine columns separated by a tab delimiter. The last column expands into a
 list of attributes, separated by a semicolon an exactly one space. Each
-attribute consists of a type - value pair which are separated by one empty 
+attribute consists of a type - value pair which are separated by one empty
 space. Enclosing quotation marks (") around attribute values are  marks are
 skipped during import.
 }
@@ -74,11 +74,11 @@ Wolfgang Kaisers
 \references{UCSC Genome Bioinformatics: Data File Formats.
 \url{http://genome.ucsc.edu/FAQ/FAQformat.html#format3}}
 \examples{
-# + + + + + + + + + + + + + + + + + + + #
-# Ensembl
-# + + + + + + + + + + + + + + + + + + + #
-ef<-system.file("extdata", package="refGenome")
-en<-ensemblGenome(ef)
+##-------------------------------------##
+## Ensembl
+##-------------------------------------##
+ef <- system.file("extdata", package="refGenome")
+en <- ensemblGenome(ef)
 read.gtf(en, "hs.ensembl.76.small.gtf")
 }
 \keyword{refJunctions}

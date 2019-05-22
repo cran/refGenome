@@ -34,19 +34,19 @@ Objects can be created by calls of the form \code{refExons(rg)}.
             where SQLite database is written.}
         %
         \item{\code{ev}:}{Object of class \code{"environment"}
-            Environment that contains data structures. 
+            Environment that contains data structures.
             Optionally, there are gtf and attr data.frames. }
         %
     }
 }
 \section{Methods}{
     \describe{
-        \item{show}{\code{signature(object = "ensemblExons")}: 
+        \item{show}{\code{signature(object = "ensemblExons")}:
             Creates a sensible printout. }
         %
         \item{getSpliceTable}{\code{signature(object = "ensemblExons",
-            coding="logical")}: 
-            Returns tabled splice sites. 
+            coding="logical")}:
+            Returns tabled splice sites.
             When \code{coding}=TRUE only entries with
             \code{gene_biotype=="protein_coding"} are included.}
         %
@@ -63,25 +63,29 @@ Objects can be created by calls of the form \code{refExons(rg)}.
 Wolfgang Kaisers
 }
 \examples{
-# + + + + + + + + + + + + + + + + + + #
-# A) Ensembl
-# + + + + + + + + + + + + + + + + + + #
-ensfile<-system.file("extdata", 
+##-------------------------------------##
+## A) Ensembl
+##-------------------------------------##
+ensfile <- system.file("extdata",
                         "hs.ensembl.62.small.RData", package="refGenome")
-ens<-loadGenome(ensfile)
-enex<-refExons(ens)
+ens <- loadGenome(ensfile)
+enex <- refExons(ens)
+\donttest{
 saveGenome(enex,"enex.RData", useBasedir=FALSE)
-er<-loadGenome("enex.RData")
+er <- loadGenome("enex.RData")
+}
 # Unify exons
 uex <- unifyRanges(enex)
 
-# + + + + + + + + + + + + + + + + + + #
-# B) UCSC
-# + + + + + + + + + + + + + + + + + + #
-ucfile<-system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
-uc<-loadGenome(ucfile)
-ucex<-refExons(uc)
+##-------------------------------------##
+## B) UCSC
+##-------------------------------------##
+ucfile <- system.file("extdata", "hs.ucsc.small.RData", package="refGenome")
+uc <- loadGenome(ucfile)
+ucex <- refExons(uc)
+\donttest{
 saveGenome(ucex, "ucex.RData", useBasedir=FALSE)
-ur<-loadGenome("ucex.RData")
+ur <- loadGenome("ucex.RData")
+}
 }
 \keyword{classes}
